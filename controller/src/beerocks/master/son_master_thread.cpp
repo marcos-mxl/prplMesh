@@ -471,9 +471,10 @@ bool master_thread::handle_cmdu_1905_autoconfiguration_WSC(Socket *sd,
         return false;
     }
 
-    auto radio_mac = network_utils::mac_to_string(m1->M1Frame().mac_attr.data.oct);
+    auto radio_mac        = network_utils::mac_to_string(m1->M1Frame().mac_attr.data.oct);
+    auto radio_identifier = network_utils::mac_to_string(ruid->radio_uid());
     LOG(INFO) << "Intel radio agent " << radio_mac << " join";
-    if (!handle_intel_slave_join(sd, cmdu_rx, cmdu_tx, radio_mac)) {
+    if (!handle_intel_slave_join(sd, cmdu_rx, cmdu_tx, radio_mac, radio_identifier)) {
         LOG(ERROR) << "Not an Intel agent " << radio_mac << " (" << manufacturer << ")";
         return false;
     }
@@ -483,7 +484,8 @@ bool master_thread::handle_cmdu_1905_autoconfiguration_WSC(Socket *sd,
 
 bool master_thread::handle_intel_slave_join(Socket *sd, ieee1905_1::CmduMessageRx &cmdu_rx,
                                             ieee1905_1::CmduMessageTx &cmdu_tx,
-                                            const std::string &radio_mac)
+                                            const std::string &radio_mac,
+                                            const std::string &radio_identifier)
 {
     auto tlv_vs = cmdu_tx.add_vs_tlv(ieee1905_1::tlvVendorSpecific::eVendorOUI::OUI_INTEL);
     if (!tlv_vs) {
@@ -531,7 +533,6 @@ bool master_thread::handle_intel_slave_join(Socket *sd, ieee1905_1::CmduMessageR
         network_utils::ipv4_to_string(notification->backhaul_params().bridge_ipv4);
     bool backhaul_manager            = (bool)notification->backhaul_params().is_backhaul_manager;
     beerocks::ePlatform ire_platform = (beerocks::ePlatform)notification->platform();
-    std::string radio_identifier = network_utils::mac_to_string(notification->radio_identifier());
 
     std::string gw_name;
     if (is_gw_slave) {

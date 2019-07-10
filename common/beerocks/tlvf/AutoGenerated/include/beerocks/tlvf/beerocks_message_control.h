@@ -48,7 +48,6 @@ class cACTION_CONTROL_SLAVE_JOINED_NOTIFICATION : public BaseClass
         uint8_t& platform();
         uint8_t& low_pass_filter_on();
         uint8_t& enable_repeater_mode();
-        sMacAddr& radio_identifier();
         uint8_t& is_slave_reconf();
         void class_swap();
         static size_t get_initial_size();
@@ -66,7 +65,6 @@ class cACTION_CONTROL_SLAVE_JOINED_NOTIFICATION : public BaseClass
         uint8_t* m_platform = nullptr;
         uint8_t* m_low_pass_filter_on = nullptr;
         uint8_t* m_enable_repeater_mode = nullptr;
-        sMacAddr* m_radio_identifier = nullptr;
         uint8_t* m_is_slave_reconf = nullptr;
 };
 
