@@ -4530,7 +4530,7 @@ bool slave_thread::autoconfig_wsc_add_m1()
         return false;
     }
 
-    std::copy_n(hostap_params.iface_mac.oct, sizeof(sMacAddr), m1->M1Frame().mac_attr.data.oct);
+    m1->M1Frame().mac_attr.data = hostap_params.iface_mac;
     // TODO: read manufactured, name, model and device name from BPL
     string_utils::copy_string(m1->M1Frame().manufacturer_attr.data, "Intel",
                               m1->M1Frame().manufacturer_attr.data_length);
