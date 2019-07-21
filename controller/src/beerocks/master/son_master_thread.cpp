@@ -26,6 +26,7 @@
 #include "tasks/network_health_check_task.h"
 
 #include <beerocks/bcl/beerocks_version.h>
+#include <beerocks/bcl/beerocks_sec_utils.h>
 #include <beerocks/bcl/son/son_wireless_utils.h>
 #include <easylogging++.h>
 
@@ -385,6 +386,8 @@ bool master_thread::autoconfig_wsc_add_m2(std::shared_ptr<ieee1905_1::tlvWscM1> 
     std::memset(m2->uuid_r_attr().data, 0xee, m2->uuid_r_attr().data_length);
     m2->authentication_type_flags_attr().data = m1->authentication_type_flags_attr().data;
     m2->encryption_type_flags_attr().data     = m1->encryption_type_flags_attr().data;
+    std::copy_n(m1->enrolee_nonce_attr().data, m2->enrolee_nonce_attr().data_length, m2->enrolee_nonce_attr().data);
+    sec::random_bytes(m2->registrar_nonce_attr().data, m2->registrar_nonce_attr().data_length);
     m2->rf_bands_attr().data                  = (m1->rf_bands_attr().data & WSC::WSC_RF_BAND_5GHZ)
                                    ? WSC::WSC_RF_BAND_5GHZ
                                    : WSC::WSC_RF_BAND_2GHZ;

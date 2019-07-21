@@ -10,6 +10,7 @@
 #include "../monitor/monitor_thread.h"
 
 #include <beerocks/bcl/beerocks_utils.h>
+#include <beerocks/bcl/beerocks_sec_utils.h>
 #include <beerocks/bcl/beerocks_version.h>
 #include <beerocks/bcl/network/network_utils.h>
 #include <beerocks/bcl/son/son_wireless_utils.h>
@@ -30,6 +31,7 @@
 #include <tlvf/wfa_map/tlvChannelSelectionResponse.h>
 #include <tlvf/wfa_map/tlvOperatingChannelReport.h>
 #include <tlvf/wfa_map/tlvTransmitPowerLimit.h>
+#include <random>
 
 // BPL Error Codes
 #include <bpl/bpl_cfg.h>
@@ -4733,7 +4735,9 @@ bool slave_thread::autoconfig_wsc_add_m1()
         return false;
     std::memset(m1->uuid_e_attr().data, 0xff, m1->uuid_e_attr().data_length);
     m1->authentication_type_flags_attr().data = WSC::WSC_AUTH_OPEN | WSC::WSC_AUTH_WPA2;
-    m1->encryption_type_flags_attr().data     = WSC::WSC_ENCR_NONE;
+    m1->encryption_type_flags_attr().data     = WSC::WSC_ENCR_AES;
+    sec::random_bytes(m1->enrolee_nonce_attr().data, m1->enrolee_nonce_attr().data_length);
+
     m1->rf_bands_attr().data =
         hostap_params.iface_is_5ghz ? WSC::WSC_RF_BAND_5GHZ : WSC::WSC_RF_BAND_2GHZ;
     // Simulate that this radio supports both fronthaul and backhaul BSS
