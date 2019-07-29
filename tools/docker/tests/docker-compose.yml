@@ -1,0 +1,28 @@
+version: '2'
+services:
+  gateway:
+    build: .
+    container_name: gateway
+    volumes:
+      - ${INSTALL_DIR}:${INSTALL_DIR}
+    environment:
+      - INSTALL_DIR=${INSTALL_DIR}
+    entrypoint: start-controller-agent
+    privileged: true
+
+  repeater:
+    build: .
+    container_name: repeater
+    volumes:
+      - ${INSTALL_DIR}:${INSTALL_DIR}
+    environment:
+      - INSTALL_DIR=${INSTALL_DIR}
+      - IPADDR=
+    entrypoint: start-agent
+    privileged: true
+
+networks:
+  default:
+    external:
+      name: prplMesh-net
+  

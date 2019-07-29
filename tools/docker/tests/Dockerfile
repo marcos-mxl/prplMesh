@@ -1,0 +1,35 @@
+ARG image=ubuntu:19.04
+###############################################################
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+# Copyright (c) 2019 Tomer Eliyahu (Intel)
+# This code is subject to the terms of the BSD+Patent license.
+# See LICENSE file for more details.
+###############################################################
+
+FROM $image
+
+# Update Software repository
+RUN apt-get update && apt-get install -y \
+	gdb \
+	binutils \
+	libreadline-dev \
+	libncurses-dev \
+	libssl-dev \
+	libjson-c-dev \
+	libnl-genl-3-dev \
+	libzmq3-dev \
+	python \
+	python-yaml \
+	vim \
+	net-tools \
+	bridge-utils \
+	iputils-ping \
+	iproute2 \
+	psmisc \
+	clang-format \
+    && rm -rf /var/lib/apt/lists/*
+
+ADD start-controller-agent /usr/bin
+ADD start-agent /usr/bin
+
+#ENTRYPOINT ["/usr/bin/start-controller-agent"]
