@@ -272,8 +272,43 @@ void wfa_ca::handle_wfa_ca_message(
         break;
     }
     case eWfaCaCommand::DEVICE_GET_INFO: {
-        // TODO
-        reply(sd, cmdu_tx, eWfaCaStatus::INVALID, "unimplemented command");
+
+        /* 
+        * This command returns the vendor, model and software version of the DUT.
+        * The returned model and version will be truncated by the UCC when it creates the JSON log for the Test Management
+        * system.
+        *
+        * Parameters:
+        * 
+        * Param Name    | Values                        | Description
+        * ----------------------------------------------------------------------------------------
+        * "model"       | string                        | Device model number    
+        * "vendor"      | string                        | Name of vendor
+        * "version"     | string                        | Version of the DUT’s software interface that uniquely identifies the device software
+        * 
+        * Return Values: 
+        *   None.
+        *
+        * Example:
+        *  UCC: device_get_info
+        *  CA: status,RUNNING
+        *  CA: status,COMPLETE,vendor,MyVendor,model,DutModel,version,1.16
+        *  UCC: device_get_info,NAME,abc11n
+        *  CA: status,RUNNING
+        *  CA: status,COMPLETE,vendor,APVendor,model,APModel,version,5.50
+        *  CCG: device_get_info
+        *  CA: status,RUNNING
+        *  CA: status,COMPLETE,vendor,QualcommAtheros,model,QCA123456_AR8905,version,SixtyGig_1234
+        */
+        
+        // send back first reply
+        if (!reply(sd, cmdu_tx, eWfaCaStatus::RUNNING)) {
+            LOG(ERROR) << "failed to send reply";
+            break;
+        }
+
+        // Send back second reply
+        reply(sd, cmdu_tx, eWfaCaStatus::COMPLETE, "vendor,Intel,model,prplMesh,version,1.4.0");
         break;
     }
     case eWfaCaCommand::DEV_GET_PARAMETER: {
