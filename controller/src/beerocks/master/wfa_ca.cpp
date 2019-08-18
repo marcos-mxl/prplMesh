@@ -87,6 +87,8 @@ wfa_ca::eWfaCaCommand wfa_ca::wfa_ca_command_from_string(std::string command)
         return eWfaCaCommand::DEV_SEND_1905;
     } else if (command == "DEV_SET_CONFIG") {
         return eWfaCaCommand::DEV_SET_CONFIG;
+    } else if (command == "DEV_GET_PARAMETER") {
+        return eWfaCaCommand::DEV_GET_PARAMETER;
     }
 
     return eWfaCaCommand::WFA_CA_COMMAND_MAX;
@@ -312,8 +314,42 @@ void wfa_ca::handle_wfa_ca_message(
         break;
     }
     case eWfaCaCommand::DEV_GET_PARAMETER: {
-        // TODO
-        reply(sd, cmdu_tx, eWfaCaStatus::INVALID, "unimplemented command");
+
+        /* 
+        * This command retrieves the requested parameter information and sends the information in the response.
+        *
+        * Parameters:
+        * 
+        * Param Name    | Values                        | Description
+        * ----------------------------------------------------------------------------------------
+        * "program"     | string (MAP)                  | Program name
+        * "ruid"        | string                        | A radio Unique ID
+        * "SSID"        | string                        | The SSID that fronthaul AP is configured. When SSID is not specified for the parameter
+                                                          "macaddr", it implies that device should return backhaul STA's MAC address. SSID is also
+                                                          not required for the parameter "ALid"
+        * 
+        * Return Values: 
+        *   None.
+        *
+        * Example:
+        *  dev_get_parameter,program,map,ruid,WTS_REPLACE_RUID,ssid,Multi-AP-24GC-1,parameter,macaddr
+        *  status,COMPLETE,macaddr,11:22:33:44:55:66
+        *  dev_get_parameter,program,map,ruid,WTS_REPLACE_RUID,ssid,Multi-AP-24GC-1,parameter,bssid
+        *  status,COMPLETE,bssid,11:22:33:44:55:66
+        */
+
+        // For controller certification, the following command is received to get the ALid:
+        // DUT (127.0.0.1:5000) ---> dev_get_parameter,program,map,parameter,ALid
+
+        if (!reply(sd, cmdu_tx, eWfaCaStatus::RUNNING)) {
+            LOG(ERROR) << "failed to send reply";
+            break;
+        }
+    
+        std::string alid;
+        if (!net::network_utils::linux_iface_get_mac("br-lan", alid))
+            reply(sd, cmdu_tx, eWfaCaStatus::INVALID, "FAIL");
+        reply(sd, cmdu_tx, eWfaCaStatus::COMPLETE, std::string("aLid,") + alid);
         break;
     }
     case eWfaCaCommand::DEV_RESET_DEFAULT: {
