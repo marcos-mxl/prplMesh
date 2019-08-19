@@ -70,10 +70,6 @@ bool master_thread::init()
     set_server_max_connections(SOCKET_MAX_CONNECTIONS);
     set_select_timeout(SOCKETS_SELECT_TIMEOUT_MSEC);
 
-    auto new_statistics_polling_task =
-        std::make_shared<statistics_polling_task>(database, cmdu_tx, tasks);
-    tasks.add_task(new_statistics_polling_task);
-
     auto new_bml_task = std::make_shared<bml_task>(database, cmdu_tx, tasks);
     tasks.add_task(new_bml_task);
 
