@@ -67,8 +67,8 @@ platform_init() {
         ip link set dev "$iface" master @BEEROCKS_BRIDGE_IFACE@
         ip addr flush "$iface"
     done
-    ip addr add "$control_ip" dev "$CONTROL_IFACE"
-    ip addr add "$bridge_ip" dev @BEEROCKS_BRIDGE_IFACE@
+    ip addr add "$control_ip"/24 dev "$CONTROL_IFACE"
+    ip addr add "$bridge_ip"/24 dev @BEEROCKS_BRIDGE_IFACE@
     ip link set @BEEROCKS_BRIDGE_IFACE@ up
 }
 
