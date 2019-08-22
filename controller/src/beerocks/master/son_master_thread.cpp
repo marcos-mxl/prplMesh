@@ -496,7 +496,7 @@ bool master_thread::autoconfig_wsc_authentication(std::shared_ptr<ieee1905_1::tl
         LOG(ERROR) << "kwa_compute failure";
         return false;
     }
-
+    LOG(DEBUG) << "M2 auth: " << std::endl << utils::dump_buffer(kwa, 8);
     return true;
 }
 
