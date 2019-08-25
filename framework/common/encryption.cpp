@@ -287,7 +287,7 @@ bool wps_calculate_keys(const diffie_hellman &dh, const uint8_t *remote_pubkey,
 
     dh.compute_key(shared_secret, shared_secret_length, remote_pubkey, remote_pubkey_length);
     // Zero pad the remaining part
-    std::fill(shared_secret + shared_secret_length, shared_secret + sizeof(shared_secret), 0);
+    // std::fill(shared_secret + shared_secret_length, shared_secret + sizeof(shared_secret), 0);
 
     sha256 sha;
     sha.update(shared_secret, shared_secret_length);

@@ -444,11 +444,16 @@ bool master_thread::autoconfig_wsc_calculate_keys(std::shared_ptr<ieee1905_1::tl
                                                   const mapf::encryption::diffie_hellman &dh,
                                                   uint8_t authkey[32], uint8_t keywrapkey[16])
 {
+    LOG(DEBUG) << "M1 Public key:" << std::endl
+               << utils::dump_buffer((uint8_t*)m1->public_key_attr().data, m1->public_key_attr().data_length);
     m2->authentication_type_flags_attr().data = WSC::WSC_AUTH_OPEN | WSC::WSC_AUTH_WPA2PSK;
     m2->encryption_type_flags_attr().data     = WSC::WSC_ENCR_NONE | WSC::WSC_ENCR_AES;
     std::copy_n(m1->enrolee_nonce_attr().data, m1->enrolee_nonce_attr().data_length,
                 m2->enrolee_nonce_attr().data);
     std::copy_n(dh.nonce(), dh.nonce_length(), m2->registrar_nonce_attr().data);
+    LOG(DEBUG) << "M1 enrolee nonce: " << utils::dump_buffer((uint8_t*)m1->enrolee_nonce_attr().data, m1->enrolee_nonce_attr().data_length);
+    LOG(DEBUG) << "M2 registrar nonce: " << utils::dump_buffer((uint8_t*)m2->registrar_nonce_attr().data, m2->registrar_nonce_attr().data_length);
+
     if (!mapf::encryption::wps_calculate_keys(
             dh, m1->public_key_attr().data, m1->public_key_attr().data_length,
             m1->enrolee_nonce_attr().data, m1->mac_attr().data.oct, m2->registrar_nonce_attr().data,
@@ -457,6 +462,9 @@ bool master_thread::autoconfig_wsc_calculate_keys(std::shared_ptr<ieee1905_1::tl
         return false;
     }
     std::copy(dh.pubkey(), dh.pubkey() + dh.pubkey_length(), m2->public_key_attr().data);
+    LOG(DEBUG) << "M2 pubkey: " << utils::dump_buffer((uint8_t*)dh.pubkey(), dh.pubkey_length());
+    LOG(DEBUG) << "M2 authkey: " << utils::dump_buffer((uint8_t*)authkey, 32);
+    LOG(DEBUG) << "M2 keywrapkey: " << utils::dump_buffer((uint8_t*)keywrapkey, 16);
 
     return true;
 }
@@ -486,7 +494,10 @@ bool master_thread::autoconfig_wsc_authentication(std::shared_ptr<ieee1905_1::tl
     auto next = std::copy_n(m1->getStartBuffPtr(), m1->getLen(), buf);
     std::copy_n(m2->getStartBuffPtr(), m2->getLen() - sizeof(WSC::sWscAttrAuthenticator), next);
     LOG(DEBUG) << "m1 buf:" << std::endl << utils::dump_buffer(m1->getStartBuffPtr(), m1->getLen());
-    LOG(DEBUG) << "m2 buf:" << std::endl << utils::dump_buffer(m2->getStartBuffPtr(), m2->getLen());
+    LOG(DEBUG) << "m2 buf:" << std::endl
+               << utils::dump_buffer(m2->getStartBuffPtr(),
+                                     m2->getLen() - sizeof(WSC::sWscAttrAuthenticator));
+    LOG(DEBUG) << "m1 + m2* buf:" << std::endl << utils::dump_buffer(buf, sizeof(buf));
     // swap back
     m1->class_swap();
     m2->class_swap();
@@ -555,6 +566,7 @@ bool master_thread::autoconfig_wsc_add_m2(std::shared_ptr<ieee1905_1::tlvWscM1> 
     mapf::encryption::diffie_hellman dh;
     uint8_t authkey[32];
     uint8_t keywrapkey[16];
+
     if (!autoconfig_wsc_calculate_keys(tlvWscM1, tlvWscM2, dh, authkey, keywrapkey))
         return false;
 
@@ -569,6 +581,7 @@ bool master_thread::autoconfig_wsc_add_m2(std::shared_ptr<ieee1905_1::tlvWscM1> 
     config_data.set_ssid("prplMesh-ssid");
     config_data.authentication_type_attr().data = WSC::WSC_AUTH_WPA2;
     config_data.encryption_type_attr().data     = WSC::WSC_ENCR_AES;
+    config_data.bssid_attr().data               = tlvWscM1->mac_attr().data;
     std::fill(config_data.network_key_attr().data,
               config_data.network_key_attr().data + config_data.network_key_attr().data_length,
               0xaa); //DUMMY
@@ -577,7 +590,8 @@ bool master_thread::autoconfig_wsc_add_m2(std::shared_ptr<ieee1905_1::tlvWscM1> 
                << "     ssid: " << config_data.ssid() << std::endl
                << "     authentication_type: " << config_data.authentication_type_attr().data
                << std::endl
-               << "     encryption_type: " << config_data.encryption_type_attr().data << std::endl;
+               << "     encryption_type: " << config_data.encryption_type_attr().data << std::endl
+               << "     mac: " << network_utils::mac_to_string(config_data.bssid_attr().data);
 
     config_data.class_swap();
 
@@ -642,8 +656,11 @@ bool master_thread::handle_cmdu_1905_autoconfiguration_WSC(Socket *sd,
     auto al_mac = network_utils::mac_to_string(tlvwscM1->mac_attr().data.oct);
     auto ruid   = network_utils::mac_to_string(radio_basic_caps->radio_uid());
     LOG(INFO) << "AP_AUTOCONFIGURATION_WSC M1 al_mac=" << al_mac << " ruid=" << ruid;
-    LOG(DEBUG) << "   device " << tlvwscM1->manufacturer() << " " << tlvwscM1->model_name() << " "
-               << tlvwscM1->device_name() << " " << tlvwscM1->serial_number();
+    LOG(DEBUG) << "manufacturer: " << tlvwscM1->manufacturer(tlvwscM1->manufacturer_length())
+               << std::endl
+               << "model: " << tlvwscM1->model_name(tlvwscM1->model_name_length()) << std::endl
+               << "device: " << tlvwscM1->device_name(tlvwscM1->device_name_length()) << std::endl
+               << "serial: " << tlvwscM1->serial_number(tlvwscM1->serial_number_length());
 
     //TODO autoconfig process the rest of the class
     //TODO autoconfig Keep intel agent support only as intel enhancements
@@ -665,7 +682,7 @@ bool master_thread::handle_cmdu_1905_autoconfiguration_WSC(Socket *sd,
 
     tlvRuid->radio_uid() = network_utils::mac_from_string(ruid);
 
-    for (int i = 0; i < radio_basic_caps->maximum_number_of_bsss_supported(); i++) {
+    for (int i = 0; i < 1 /*radio_basic_caps->maximum_number_of_bsss_supported()*/; i++) {
         if (!autoconfig_wsc_add_m2(tlvwscM1)) {
             LOG(ERROR) << "Failed setting M2 attributes";
             return false;
