@@ -43,8 +43,8 @@ set_target_properties(common PROPERTIES PREFIX "mapf" VERSION ${${PROJECT}_VERSI
 target_link_libraries(common PRIVATE ${MSGLIB_TARGET} mapf::elpp json-c)
 target_include_directories(common PUBLIC ${PLATFORM_INCLUDE_DIR})
 
-# Encryption - we use OpenSSL 1.1.x API
-find_package(OpenSSL 1.1 REQUIRED)
+# Encryption - we use OpenSSL 1.0.1-x API
+find_package(OpenSSL 1.0.1 REQUIRED)
 target_link_libraries(common PRIVATE OpenSSL::SSL)
 
 configure_file(

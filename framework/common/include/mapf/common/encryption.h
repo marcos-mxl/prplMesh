@@ -12,11 +12,6 @@
 
 #include <cstdint>
 
-extern "C" {
-/** Internal defintion from OpenSSL, avoids requiring include of openssl headers. */
-struct dh_st;
-}
-
 namespace mapf {
 
 /**
@@ -73,15 +68,12 @@ public:
 
 private:
     /**
-     * OpenSSL Diffie-Hellman state structure.
-     */
-    struct dh_st *m_dh;
-
-    /**
      * If keypair generation failed in the constructor, this will be @a nullptr.
      */
     uint8_t *m_pubkey = nullptr;
     unsigned m_pubkey_length;
+    uint8_t *m_privkey = nullptr;
+    unsigned m_privkey_length;
     uint8_t m_nonce[16];
 };
 
