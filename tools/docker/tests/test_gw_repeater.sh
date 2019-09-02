@@ -40,7 +40,7 @@ main() {
             -d | --delay)         DELAY="$2"; shift; shift ;;
             -f | --force)         FORCE_OPT="-f"; shift ;;
             -g | --gateway)       GW_NAME="$2"; shift; shift ;;
-            -r | --repeater)      REPEATER_NAME="$2"; shift; shift ;;
+            -r | --repeater)      REPEATER_NAMES="$2 $REPEATER_NAMES"; shift; shift ;;
             --rm)                 REMOVE=true; shift ;;
             --gateway-only)       START_REPEATER=false; shift ;;
             --repeater-only)      START_GATEWAY=false; shift ;;
@@ -51,13 +51,20 @@ main() {
 
     status "Starting GW+Repeater test"
 
+    # default values for gateway and repeater[s] names
+    REPEATER_NAMES=${REPEATER_NAMES-repeater}
+    GW_NAME=${GW_NAME-gateway}
+
     dbg REMOVE=$REMOVE
     dbg GW_NAME=$GW_NAME
-    dbg REPEATER_NAME=$REPEATER_NAME
+    dbg REPEATER_NAMES=$REPEATER_NAMES
     dbg START_GATEWAY=$START_GATEWAY
     dbg START_REPEATER=$START_REPEATER
     dbg DELAY=$DELAY
 
+    for r in $REPEATER_NAMES; do echo $r; done
+
+    exit 0
     [ "$START_GATEWAY" = "true" ] && {
         status "Start GW (Controller + local Agent)"
         ${scriptdir}/../run.sh ${VERBOSE_OPT} ${FORCE_OPT} start-controller-agent -d -n ${GW_NAME} -m 00:11:22:33 "$@"
@@ -93,8 +100,6 @@ main() {
 
 VERBOSE=false
 REMOVE=false
-GW_NAME=gateway
-REPEATER_NAME=repeater
 START_GATEWAY=true
 START_REPEATER=true
 DELAY=5
