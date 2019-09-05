@@ -622,6 +622,17 @@ int db::get_node_last_ping_avg_ms(std::string mac)
     return n->last_ping_avg_ms;
 }
 
+const std::map<std::string, son::node::link_metrics_data> db::get_metric_data_map(std::string mac)
+{
+    auto n = get_node(mac);
+    if (!n) {
+        LOG(WARNING) << __FUNCTION__ << " - node " << mac << " does not exist!";
+        const std::map<std::string, son::node::link_metrics_data> mDummy;
+        return (mDummy);
+    }
+    return n->mOfMetricData;
+}
+
 bool db::set_hostap_active(std::string mac, bool active)
 {
     auto n = get_node(mac);

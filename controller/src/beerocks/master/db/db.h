@@ -231,6 +231,12 @@ public:
     std::string disconnected_slave_mac_queue_pop();
     void disconnected_slave_mac_queue_push(std::string node_mac);
     std::string node_to_string(std::string mac);
+    
+    /*
+    * returns reference to map that holds link metric data per Agent.
+    * use the following with caution.
+    */
+    const std::map<std::string, son::node::link_metrics_data> get_metric_data_map(std::string mac);
 
     //
     // DB node functions (get only)

@@ -10,8 +10,12 @@
 #define _NODE_H_
 
 #include "../tasks/task.h"
+#include <tlvf/ieee_1905_1/tlvTransmitterLinkMetric.h>
+#include <tlvf/ieee_1905_1/tlvReceiverLinkMetric.h>
+#include <tlvf/common/sMacAddr.h>
 
 #include <list>
+#include <map>
 
 namespace son {
 typedef struct {
@@ -181,6 +185,26 @@ public:
         std::unordered_map<int8_t, sVapElement> vaps_info;
     };
     std::shared_ptr<radio> hostap;
+
+    class link_metrics_data{
+        public:
+        
+        link_metrics_data(){};
+        ~link_metrics_data(){};
+        
+        sMacAddr al_mac_of_the_device_that_is_reported;
+        std::list<ieee1905_1::tlvTransmitterLinkMetric::sInterfacePairInfo> transmitterLinkMetrics;
+        std::list<ieee1905_1::tlvReceiverLinkMetric::sInterfacePairInfo> receiverLinkMetrics;
+
+        bool add_transmitter_link_metric(std::shared_ptr<ieee1905_1::tlvTransmitterLinkMetric> TxLinkMetricData);
+        bool add_reciever_link_metric(std::shared_ptr<ieee1905_1::tlvReceiverLinkMetric> RxLinkMetricData);
+    };
+    /*
+    * This map holds link metric data per Agent.
+    * Created empty in all nodes
+    * Used only in GW node (retreave from DB method get_metric_data_map)
+    */
+    std::map<std::string, son::node::link_metrics_data> mOfMetricData;
 
     beerocks::eBandType band_type   = beerocks::eBandType::INVALID_BAND;
     beerocks::eIfaceType iface_type = beerocks::IFACE_TYPE_ETHERNET;

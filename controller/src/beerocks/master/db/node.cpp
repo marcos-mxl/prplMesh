@@ -297,3 +297,45 @@ bool node::set_type(beerocks::eType type_)
     }
     return false;
 }
+
+bool node::link_metrics_data::add_transmitter_link_metric(std::shared_ptr<ieee1905_1::tlvTransmitterLinkMetric> TxLinkMetricData)
+{
+    al_mac_of_the_device_that_is_reported = TxLinkMetricData->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv();
+    int info_size = (int)TxLinkMetricData->interface_pair_info_length();
+    LOG(DEBUG) << "interface_pair_info_length =" << info_size;
+    for (int i = 0 ; i < info_size ; i++)
+    {
+        auto info_tuple = TxLinkMetricData->interface_pair_info(i);
+
+        if (!std::get<0>(info_tuple)) {
+            LOG(ERROR) << "add_transmitter_link_metric getting operating class entry has failed!";
+            return false;
+        }
+        auto &InterfacePairInfo = std::get<1>(info_tuple);
+
+        transmitterLinkMetrics.push_back(InterfacePairInfo);
+
+    }   
+    return true;
+}
+
+bool node::link_metrics_data::add_reciever_link_metric(std::shared_ptr<ieee1905_1::tlvReceiverLinkMetric> RxLinkMetricData)
+{
+    al_mac_of_the_device_that_is_reported = RxLinkMetricData->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv();
+
+    int info_size = (int)RxLinkMetricData->interface_pair_info_length();
+    LOG(DEBUG) << "interface_pair_info_length =" << info_size;
+    for (int i = 0 ; i < info_size ; i++)
+    {
+        auto info_tuple = RxLinkMetricData->interface_pair_info(i);
+
+        if (!std::get<0>(info_tuple)) {
+            LOG(ERROR) << "add_reciever_link_metric getting operating class entry has failed!";
+            return false;
+        }
+        auto &InterfacePairInfo = std::get<1>(info_tuple);
+
+        receiverLinkMetrics.push_back(InterfacePairInfo);
+    }   
+    return true;
+}
