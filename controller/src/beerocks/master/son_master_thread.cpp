@@ -224,6 +224,8 @@ bool master_thread::handle_cmdu_1905_1_message(Socket *sd, ieee1905_1::CmduMessa
         return handle_cmdu_1905_channel_selection_response(sd, cmdu_rx);
     case ieee1905_1::eMessageType::OPERATING_CHANNEL_REPORT_MESSAGE:
         return handle_cmdu_1905_operating_channel_report(sd, cmdu_rx);
+    case ieee1905_1::eMessageType::LINK_METRIC_RESPONSE_MESSAGE:
+        return handle_cmdu_1905_link_metric_response(sd, cmdu_rx);
     default:
         break;
     }
@@ -944,6 +946,89 @@ bool master_thread::handle_cmdu_1905_channel_selection_response(Socket *sd,
                })(response_code);
 
     } while (cmdu_rx.getNextTlvType() != int(ieee1905_1::eTlvType::TLV_END_OF_MESSAGE));
+
+    return true;
+}
+
+bool master_thread::handle_cmdu_1905_link_metric_response(Socket *sd, ieee1905_1::CmduMessageRx &cmdu_rx)
+{
+
+    auto mid = cmdu_rx.getMessageId();
+    LOG(INFO) << "Received LINK_METRIC_RESPONSE_MESSAGE, mid=" << std::dec << int(mid);
+
+    //database reference for data starage
+    std::map<std::string, son::node::link_metrics_data> mMetricData = database.get_metric_data_map(database.get_gw_mac());
+
+    //will hold new link metric data from Reporting Agent 
+    son::node::link_metrics_data NewMetricData;
+
+    // parse all tlvs in cmdu and save ap metric data to database
+    int tlvType;
+    while ((tlvType = cmdu_rx.getNextTlvType()) != int(ieee1905_1::eTlvType::TLV_END_OF_MESSAGE)) {
+
+        if (tlvType < 0) {
+            LOG(ERROR) << "getNextTlvType has failed";
+            return false;
+        }
+
+        // holds mac address of the reporting agent, used as mMetricData key
+        std::string al_mac;
+        
+        if (tlvType == int(ieee1905_1::eTlvType::TLV_TRANSMITTER_LINK_METRIC)) {
+
+            // parse tx_Link_metric_data 
+            auto TxLinkMetricData = cmdu_rx.addClass<ieee1905_1::tlvTransmitterLinkMetric>();
+            if (!TxLinkMetricData) {
+                LOG(ERROR) << "addClass ieee1905_1::tx_Link_metric_data has failed";
+                return false;
+            }
+            
+            al_mac = network_utils::mac_to_string(TxLinkMetricData->al_mac_of_the_device_that_transmits());
+            
+            //fill tx data from TLV
+            if(!NewMetricData.add_transmitter_link_metric(TxLinkMetricData))
+            {
+                LOG(ERROR) << "adding TxLinkMetricData has failed";
+                return false;
+            }
+        }
+        
+        if (tlvType == int(ieee1905_1::eTlvType::TLV_RECEIVER_LINK_METRIC)) {
+
+            // parse tlvReceiverLinkMetric 
+            auto RxLinkMetricData = cmdu_rx.addClass<ieee1905_1::tlvReceiverLinkMetric>();
+            if (!RxLinkMetricData) {
+                LOG(ERROR) << "addClass ieee1905_1::tlvReceiverLinkMetric has failed";
+                return false;
+            }
+
+            // both tx/rx TLVs need to hold the same al_mac
+            std::string next_tlv_al_mac_str = network_utils::mac_to_string(RxLinkMetricData->al_mac_of_the_device_that_transmits());
+            if (al_mac.compare(next_tlv_al_mac_str) != 0) {
+                 LOG(ERROR) << "TLV_RECEIVER_LINK_METRIC al_mac =" << al_mac 
+                            << "and TLV_TRANSMITTER_LINK_METRIC al_mac =" << next_tlv_al_mac_str 
+                            << "not the same";
+                return false;
+            }
+
+            //fill rx data from TLV
+            if(!NewMetricData.add_reciever_link_metric(RxLinkMetricData))
+            {
+                LOG(ERROR) << "adding RxLinkMetricData has failed";
+                return false;
+            }
+        }
+
+        //save agent link metric data to database or modify existing.
+        if(mMetricData.find(al_mac) != mMetricData.end()) {
+            mMetricData[al_mac] = NewMetricData;
+            LOG(DEBUG) << "existing al_mac metric data info was updated  mac= " << al_mac;
+        }else {
+            mMetricData.insert(std::make_pair(al_mac, NewMetricData));
+            LOG(DEBUG) << "new al_mac metric data info was added mac= " << al_mac;
+        }
+
+    }
 
     return true;
 }
