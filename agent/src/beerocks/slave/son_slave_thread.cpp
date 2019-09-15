@@ -5,6 +5,9 @@
  * This code is subject to the terms of the BSD+Patent license.
  * See LICENSE file for more details.
  */
+
+#include <stdlib.h>
+
 #include "son_slave_thread.h"
 
 #include "../monitor/monitor_thread.h"
@@ -24,7 +27,11 @@
 
 #include <tlvf/ieee_1905_1/tlvWscM1.h>
 #include <tlvf/ieee_1905_1/tlvWscM2.h>
+#include <tlvf/ieee_1905_1/tlvLinkMetricQuery.h>
+#include <tlvf/ieee_1905_1/tlvTransmitterLinkMetric.h>
+#include <tlvf/ieee_1905_1/tlvReceiverLinkMetric.h>
 #include <tlvf/wfa_map/tlvApRadioBasicCapabilities.h>
+//#include <tlvf/wfa_map/tlvApMetricQuery.h>
 #include <tlvf/wfa_map/tlvApRadioIdentifier.h>
 #include <tlvf/wfa_map/tlvChannelPreference.h>
 #include <tlvf/wfa_map/tlvChannelSelectionResponse.h>
@@ -474,6 +481,10 @@ bool slave_thread::handle_cmdu_control_ieee1905_1_message(Socket *sd,
         return true;
     case ieee1905_1::eMessageType::AP_CAPABILITY_QUERY_MESSAGE:
         return handle_ap_capability_query(sd, cmdu_rx);
+    // case ieee1905_1::eMessageType::AP_METRICS_QUERY_MESSAGE:
+    //     return handle_ap_metrics_query(sd, cmdu_rx);
+    case ieee1905_1::eMessageType::LINK_METRIC_QUERY_MESSAGE:
+        return handle_link_metrics_query(sd, cmdu_rx);
     case ieee1905_1::eMessageType::CHANNEL_PREFERENCE_QUERY_MESSAGE:
         return handle_channel_preference_query(sd, cmdu_rx);
     case ieee1905_1::eMessageType::CHANNEL_SELECTION_REQUEST_MESSAGE:
@@ -4741,6 +4752,104 @@ bool slave_thread::handle_ap_capability_query(Socket *sd, ieee1905_1::CmduMessag
     return true;
 }
 
+bool slave_thread::handle_link_metrics_query(Socket *sd, ieee1905_1::CmduMessageRx &cmdu_rx)
+{
+    //sMacAddr rand_mac = {255,0,0,0,0,0};
+    sMacAddr rand_mac;
+    rand_mac.oct[0] = uint8_t(rand() % 255);
+
+    const auto mid = cmdu_rx.getMessageId();
+
+    auto tlv_type = cmdu_rx.getNextTlvType();
+    while (tlv_type != int(ieee1905_1::eTlvType::TLV_END_OF_MESSAGE)) {
+        if (tlv_type == int(ieee1905_1::eTlvType::TLV_LINK_METRIC_QUERY)) {
+            auto link_metrics_query_tlv = cmdu_tx.addClass<ieee1905_1::tlvLinkMetricQuery>();
+            if (!link_metrics_query_tlv) {
+                LOG(ERROR) << "addClass tlvLinkMetricQuery has failed";
+                return false;
+            }
+            LOG(DEBUG) << "Received LINK_METRIC_QUERY_MESSAGE , mid=" << std::dec << int(mid) 
+                       << ", with TLV type="<< std::hex << int(link_metrics_query_tlv->type());
+        }
+        tlv_type = cmdu_tx.getNextTlvType();
+    }
+
+    // build and send channel response message
+    if (!cmdu_tx.create(mid, ieee1905_1::eMessageType::LINK_METRIC_RESPONSE_MESSAGE)) {
+        LOG(ERROR) << "cmdu creation of type LINK_METRIC_RESPONSE_MESSAGE, has failed";
+        return false;
+    }
+
+    //add dummy tlvTransmitterLinkMetric tlv
+    auto link_metrics_tx_tlv = cmdu_tx.addClass<ieee1905_1::tlvTransmitterLinkMetric>();
+    if (!link_metrics_tx_tlv) {
+        LOG(ERROR) << "addClass ieee1905_1::tlvTransmitterLinkMetric has failed";
+        return false;
+    }
+    link_metrics_tx_tlv->al_mac_of_the_device_that_transmits() = network_utils::mac_from_string("46:55:66:77:00:00");
+    link_metrics_tx_tlv->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv() = rand_mac;
+    
+    auto interface_pair_info_list = link_metrics_tx_tlv->alloc_interface_pair_info();
+    if (!interface_pair_info_list) {
+        LOG(ERROR) << "alloc_interface_pair_info() has failed!";
+        return false;
+    }
+    auto interface_pair_info_list_tuple = link_metrics_tx_tlv->interface_pair_info(0);
+    if (!std::get<0>(interface_pair_info_list_tuple)) {
+        LOG(ERROR) << "getting operating class entry has failed!";
+        return false;
+    }
+    auto &interface_pair_info_entry = std::get<1>(interface_pair_info_list_tuple);
+    interface_pair_info_entry.link_metric_info.phy_rate = 0xDADA;
+    
+
+
+    //add dummy tlvTransmitterLinkMetric tlv
+    auto link_metrics_rx_tlv = cmdu_tx.addClass<ieee1905_1::tlvReceiverLinkMetric>();
+    if (!link_metrics_rx_tlv) {
+        LOG(ERROR) << "addClass ieee1905_1::tlvReceiverLinkMetric has failed";
+        return false;
+    }
+    
+    //link_metrics_rx_tlv->al_mac_of_the_device_that_transmits() = network_utils::mac_from_string(config.radio_identifier);
+    link_metrics_rx_tlv->al_mac_of_the_device_that_transmits() = network_utils::mac_from_string("46:55:66:77:00:00");
+    // link_metrics_rx_tlv->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv() = network_utils::mac_from_string("46:55:66:77:00:AA");
+    link_metrics_rx_tlv->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv() = rand_mac;
+
+    auto rx_interface_pair_info_list = link_metrics_rx_tlv->alloc_interface_pair_info();
+    if (!rx_interface_pair_info_list) {
+        LOG(ERROR) << "rx alloc_interface_pair_info() has failed!";
+        return false;
+    }
+    auto rx_interface_pair_info_list_tuple = link_metrics_rx_tlv->interface_pair_info(0);
+    if (!std::get<0>(interface_pair_info_list_tuple)) {
+        LOG(ERROR) << "getting operating class entry has failed!";
+        return false;
+    }
+    auto &rx_interface_pair_info_entry = std::get<1>(rx_interface_pair_info_list_tuple);
+    rx_interface_pair_info_entry.link_metric_info.rssi_db = 0x1E;
+
+    LOG(DEBUG) << "sending  LINK_METRIC_RESPONSE_MESSAGE ";
+    LOG(DEBUG) << " with tx TLV al_mac= " 
+               << int(link_metrics_tx_tlv->al_mac_of_the_device_that_transmits().oct[0])
+               << " reported al_mac = " 
+               << network_utils::mac_to_string(link_metrics_tx_tlv->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv())
+               << " phy_rate = "
+               << std::hex << int(interface_pair_info_entry.link_metric_info.phy_rate);
+    LOG(DEBUG) << " with rx TLV al_mac= "
+               << int(link_metrics_rx_tlv->al_mac_of_the_device_that_transmits().oct[0])
+               << " reported al_mac = " 
+               << network_utils::mac_to_string(link_metrics_rx_tlv->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv())
+               << " rssi_db = "
+               << std::hex << int(rx_interface_pair_info_entry.link_metric_info.rssi_db);
+
+    if (!send_cmdu_to_controller(cmdu_tx)) {
+        LOG(ERROR) << "failed to send LINK_METRIC_RESPONSE_MESSAGE";
+        return false;
+    }
+
+    return true;
+}
 bool slave_thread::handle_channel_preference_query(Socket *sd, ieee1905_1::CmduMessageRx &cmdu_rx)
 {
     const auto mid = cmdu_rx.getMessageId();

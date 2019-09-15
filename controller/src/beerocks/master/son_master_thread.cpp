@@ -950,29 +950,62 @@ bool master_thread::handle_cmdu_1905_channel_selection_response(Socket *sd,
     return true;
 }
 
+static void print_metric_list(std::map<std::string, son::node::link_metrics_data> &mMetricData)
+{
+    LOG(DEBUG) << "Printing Metric data list";
+    for (auto const& pair : mMetricData)
+    {
+        LOG(DEBUG)  << "sent from al_mac= " << pair.first << std::endl
+                    << "reported al_mac"
+                    << network_utils::mac_to_string(pair.second.al_mac_of_the_device_that_is_reported) << std::endl;
+
+        auto &vrx = pair.second.receiverLinkMetrics;
+        for (unsigned int i = 0; i < vrx.size(); ++i)
+        {
+            LOG(DEBUG)  << "rx interface pair data # " << i
+                        << " rssi= "
+                        << std::hex << int(vrx[i].link_metric_info.rssi_db);
+        }
+
+        auto &vtx = pair.second.transmitterLinkMetrics;
+        for (unsigned int i = 0; i < vtx.size(); i++)
+        {
+            LOG(DEBUG)  << "tx interface pair data # " << i
+                        << " phy_rate= "
+                        << std::hex << int(vtx[i].link_metric_info.phy_rate);
+        }
+    }
+}
+
 bool master_thread::handle_cmdu_1905_link_metric_response(Socket *sd, ieee1905_1::CmduMessageRx &cmdu_rx)
 {
 
     auto mid = cmdu_rx.getMessageId();
     LOG(INFO) << "Received LINK_METRIC_RESPONSE_MESSAGE, mid=" << std::dec << int(mid);
 
-    //database reference for data starage
-    std::map<std::string, son::node::link_metrics_data> mMetricData = database.get_metric_data_map(database.get_gw_mac());
+    //database reference for combined metric data storage
+    auto &mMetricData = database.get_metric_data_map(database.get_gw_mac());
+    
 
     //will hold new link metric data from Reporting Agent 
     son::node::link_metrics_data NewMetricData;
 
     // parse all tlvs in cmdu and save ap metric data to database
     int tlvType;
+    // holds mac address of the reporting agent, used as mMetricData key
+    std::string reporting_agent_al_mac = "\n";
+
+    print_metric_list(mMetricData);
+
     while ((tlvType = cmdu_rx.getNextTlvType()) != int(ieee1905_1::eTlvType::TLV_END_OF_MESSAGE)) {
 
+        LOG(DEBUG) << "getNextTlvType";       
         if (tlvType < 0) {
             LOG(ERROR) << "getNextTlvType has failed";
             return false;
         }
 
-        // holds mac address of the reporting agent, used as mMetricData key
-        std::string al_mac;
+
         
         if (tlvType == int(ieee1905_1::eTlvType::TLV_TRANSMITTER_LINK_METRIC)) {
 
@@ -982,8 +1015,11 @@ bool master_thread::handle_cmdu_1905_link_metric_response(Socket *sd, ieee1905_1
                 LOG(ERROR) << "addClass ieee1905_1::tx_Link_metric_data has failed";
                 return false;
             }
-            
-            al_mac = network_utils::mac_to_string(TxLinkMetricData->al_mac_of_the_device_that_transmits());
+        
+            reporting_agent_al_mac = network_utils::mac_to_string(TxLinkMetricData->al_mac_of_the_device_that_transmits());
+
+            LOG(DEBUG) << "recieved  tlvTransmitterLinkMetric from al_mca=" << reporting_agent_al_mac << std::endl;
+
             
             //fill tx data from TLV
             if(!NewMetricData.add_transmitter_link_metric(TxLinkMetricData))
@@ -1002,33 +1038,38 @@ bool master_thread::handle_cmdu_1905_link_metric_response(Socket *sd, ieee1905_1
                 return false;
             }
 
-            // both tx/rx TLVs need to hold the same al_mac
-            std::string next_tlv_al_mac_str = network_utils::mac_to_string(RxLinkMetricData->al_mac_of_the_device_that_transmits());
-            if (al_mac.compare(next_tlv_al_mac_str) != 0) {
-                 LOG(ERROR) << "TLV_RECEIVER_LINK_METRIC al_mac =" << al_mac 
-                            << "and TLV_TRANSMITTER_LINK_METRIC al_mac =" << next_tlv_al_mac_str 
-                            << "not the same";
-                return false;
-            }
+            if (!reporting_agent_al_mac.empty()) {
+                if (reporting_agent_al_mac.compare(network_utils::mac_to_string(RxLinkMetricData->al_mac_of_the_device_that_transmits())) != 0) {
+                    LOG(ERROR)  << "TLV_RECEIVER_LINK_METRIC reporter al_mac =" 
+                                << reporting_agent_al_mac << std::endl
+                                << " and TLV_TRANSMITTER_LINK_METRIC reporter al_mac =" 
+                                << network_utils::mac_to_string(RxLinkMetricData->al_mac_of_the_device_that_transmits()) << std::endl
+                                << " not the same";
+                    return false;
+                }
+            }   
+ 
+            LOG(DEBUG) << "recieved  tlvReceiverLinkMetric from al_mac=" << reporting_agent_al_mac << std::endl;
 
             //fill rx data from TLV
-            if(!NewMetricData.add_reciever_link_metric(RxLinkMetricData))
+            if(!NewMetricData.add_receiver_link_metric(RxLinkMetricData))
             {
                 LOG(ERROR) << "adding RxLinkMetricData has failed";
                 return false;
             }
         }
-
-        //save agent link metric data to database or modify existing.
-        if(mMetricData.find(al_mac) != mMetricData.end()) {
-            mMetricData[al_mac] = NewMetricData;
-            LOG(DEBUG) << "existing al_mac metric data info was updated  mac= " << al_mac;
-        }else {
-            mMetricData.insert(std::make_pair(al_mac, NewMetricData));
-            LOG(DEBUG) << "new al_mac metric data info was added mac= " << al_mac;
-        }
-
     }
+
+    //save agent link metric data to database or modify existing.
+    if(mMetricData.find(reporting_agent_al_mac) != mMetricData.end()) {
+        mMetricData[reporting_agent_al_mac] = NewMetricData;
+        LOG(DEBUG) << "metric data  was updated for existing al_mac = " << reporting_agent_al_mac << std::endl;
+    }else {
+        mMetricData.insert(std::make_pair(reporting_agent_al_mac, NewMetricData));
+        LOG(DEBUG) << "new metric data  was added for al_mac= " << reporting_agent_al_mac << std::endl;
+    }
+
+    print_metric_list(mMetricData);
 
     return true;
 }

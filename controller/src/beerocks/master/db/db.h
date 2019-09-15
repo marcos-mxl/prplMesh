@@ -236,7 +236,8 @@ public:
     * returns reference to map that holds link metric data per Agent.
     * use the following with caution.
     */
-    const std::map<std::string, son::node::link_metrics_data> get_metric_data_map(std::string mac);
+   std::map<std::string, son::node::link_metrics_data> &get_metric_data_map(const std::string& mac);
+    // std::map<std::string, son::node::link_metrics_data> &get_metric_data_map(std::string mac);
 
     //
     // DB node functions (get only)

@@ -183,6 +183,7 @@ public:
         };
         std::shared_ptr<ap_stats_params> stats_info;
         std::unordered_map<int8_t, sVapElement> vaps_info;
+
     };
     std::shared_ptr<radio> hostap;
 
@@ -193,11 +194,13 @@ public:
         ~link_metrics_data(){};
         
         sMacAddr al_mac_of_the_device_that_is_reported;
-        std::list<ieee1905_1::tlvTransmitterLinkMetric::sInterfacePairInfo> transmitterLinkMetrics;
-        std::list<ieee1905_1::tlvReceiverLinkMetric::sInterfacePairInfo> receiverLinkMetrics;
+        // std::list<ieee1905_1::tlvTransmitterLinkMetric::sInterfacePairInfo> transmitterLinkMetrics;
+        // std::list<ieee1905_1::tlvReceiverLinkMetric::sInterfacePairInfo> receiverLinkMetrics;
+        std::vector<ieee1905_1::tlvTransmitterLinkMetric::sInterfacePairInfo> transmitterLinkMetrics;
+        std::vector<ieee1905_1::tlvReceiverLinkMetric::sInterfacePairInfo> receiverLinkMetrics;
 
         bool add_transmitter_link_metric(std::shared_ptr<ieee1905_1::tlvTransmitterLinkMetric> TxLinkMetricData);
-        bool add_reciever_link_metric(std::shared_ptr<ieee1905_1::tlvReceiverLinkMetric> RxLinkMetricData);
+        bool add_receiver_link_metric(std::shared_ptr<ieee1905_1::tlvReceiverLinkMetric> RxLinkMetricData);
     };
     /*
     * This map holds link metric data per Agent.

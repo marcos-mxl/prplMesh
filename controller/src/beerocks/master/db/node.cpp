@@ -303,7 +303,7 @@ bool node::link_metrics_data::add_transmitter_link_metric(std::shared_ptr<ieee19
     al_mac_of_the_device_that_is_reported = TxLinkMetricData->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv();
     int info_size = (int)TxLinkMetricData->interface_pair_info_length();
     LOG(DEBUG) << "interface_pair_info_length =" << info_size;
-    for (int i = 0 ; i < info_size ; i++)
+    for (int i = 0 ; i < info_size/(int)sizeof(ieee1905_1::tlvTransmitterLinkMetric::sInterfacePairInfo); i++)
     {
         auto info_tuple = TxLinkMetricData->interface_pair_info(i);
 
@@ -311,31 +311,41 @@ bool node::link_metrics_data::add_transmitter_link_metric(std::shared_ptr<ieee19
             LOG(ERROR) << "add_transmitter_link_metric getting operating class entry has failed!";
             return false;
         }
+        // auto &InterfacePairInfo = std::get<1>(info_tuple);
         auto &InterfacePairInfo = std::get<1>(info_tuple);
 
         transmitterLinkMetrics.push_back(InterfacePairInfo);
+
+        LOG(DEBUG) << "adding tlvTransmitterLinkMetric data to list"
+            << " phy_rate = "
+            << int(InterfacePairInfo.link_metric_info.phy_rate);
 
     }   
     return true;
 }
 
-bool node::link_metrics_data::add_reciever_link_metric(std::shared_ptr<ieee1905_1::tlvReceiverLinkMetric> RxLinkMetricData)
+bool node::link_metrics_data::add_receiver_link_metric(std::shared_ptr<ieee1905_1::tlvReceiverLinkMetric> RxLinkMetricData)
 {
     al_mac_of_the_device_that_is_reported = RxLinkMetricData->al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv();
 
     int info_size = (int)RxLinkMetricData->interface_pair_info_length();
     LOG(DEBUG) << "interface_pair_info_length =" << info_size;
-    for (int i = 0 ; i < info_size ; i++)
+    for (int i = 0 ; i < info_size/(int)sizeof(ieee1905_1::tlvReceiverLinkMetric::sInterfacePairInfo); i++)
     {
         auto info_tuple = RxLinkMetricData->interface_pair_info(i);
 
         if (!std::get<0>(info_tuple)) {
-            LOG(ERROR) << "add_reciever_link_metric getting operating class entry has failed!";
+            LOG(ERROR) << "add_receiver_link_metric getting operating class entry has failed!";
             return false;
         }
-        auto &InterfacePairInfo = std::get<1>(info_tuple);
+        // auto &InterfacePairInfo = std::get<1>(info_tuple);
+        auto InterfacePairInfo = std::get<1>(info_tuple);
 
         receiverLinkMetrics.push_back(InterfacePairInfo);
+
+        LOG(DEBUG) << "adding tlvReceiverLinkMetric data to list"
+            << " rssi_db = "
+            << int(InterfacePairInfo.link_metric_info.rssi_db);
     }   
     return true;
 }
