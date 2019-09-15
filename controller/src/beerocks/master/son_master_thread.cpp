@@ -554,8 +554,9 @@ bool master_thread::autoconfig_wsc_authentication(std::shared_ptr<ieee1905_1::tl
  * @return true on success
  * @return false on failure
  */
-bool master_thread::autoconfig_wsc_add_m2(std::shared_ptr<ieee1905_1::tlvWscM1> tlvWscM1,
-                                          const db::bss_info_conf_t *bss_info_conf)
+bool master_thread::autoconfig_wsc_add_m2(
+    std::shared_ptr<wfa_map::tlvApRadioBasicCapabilities> radio_basic_caps,
+    std::shared_ptr<ieee1905_1::tlvWscM1> tlvWscM1, const db::bss_info_conf_t *bss_info_conf)
 {
     if (!tlvWscM1) {
         LOG(ERROR) << "Invalid M1";
@@ -649,7 +650,7 @@ bool master_thread::autoconfig_wsc_add_m2(std::shared_ptr<ieee1905_1::tlvWscM1> 
     // the closest to the WSC-specified behaviour.
     //
     // Note that the BBF 1905.1 implementation (meshComms) simply ignores the MAC address in M2.
-    config_data.bssid_attr().data = tlvWscM1->mac_attr().data;
+    config_data.bssid_attr().data = radio_basic_caps->radio_uid(); //tlvWscM1->mac_attr().data;
 
     config_data.class_swap();
 
@@ -776,7 +777,7 @@ bool master_thread::handle_cmdu_1905_autoconfiguration_WSC(Socket *sd,
             LOG(INFO) << "Configured #BSS exceeds maximum for " << al_mac << " radio " << ruid;
             break;
         }
-        if (!autoconfig_wsc_add_m2(tlvwscM1, &bss_info_conf)) {
+        if (!autoconfig_wsc_add_m2(radio_basic_caps, tlvwscM1, &bss_info_conf)) {
             LOG(ERROR) << "Failed setting M2 attributes";
             return false;
         }
@@ -785,7 +786,7 @@ bool master_thread::handle_cmdu_1905_autoconfiguration_WSC(Socket *sd,
 
     // If no BSS (either because none are configured, or because they don't match), tear down.
     if (num_bsss == 0) {
-        if (!autoconfig_wsc_add_m2(tlvwscM1, nullptr)) {
+        if (!autoconfig_wsc_add_m2(radio_basic_caps, tlvwscM1, nullptr)) {
             LOG(ERROR) << "Failed setting M2 attributes";
             return false;
         }
