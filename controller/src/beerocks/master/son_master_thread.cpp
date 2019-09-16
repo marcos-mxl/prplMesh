@@ -430,7 +430,10 @@ bool master_thread::autoconfig_wsc_add_m2_encrypted_settings(
     // (= plaintext length + 64 bits HMAC aligned to 16 bytes boundary)
     // The Key Wrap Authenticator is 96 bits long
     size_t len = (config_data.getLen() + sizeof(WSC::sWscAttrKeyWrapAuthenticator) + 15) & ~0xFU;
-
+    LOG(DEBUG) << "ConfigData len=" << config_data.getLen();
+    LOG(DEBUG) << "authenticator len=" << sizeof(WSC::sWscAttrKeyWrapAuthenticator);
+    LOG(DEBUG) << "Calculated length=" << len;
+    //LOG(DEBUG) << "Encrypted Settings Length field=" << m2->encrypted_settings()->length();
     auto encrypted_settings = m2->create_encrypted_settings();
     if (!encrypted_settings)
         return false;
@@ -439,6 +442,7 @@ bool master_thread::autoconfig_wsc_add_m2_encrypted_settings(
     if (!m2->add_encrypted_settings(encrypted_settings))
         return false;
 
+    LOG(DEBUG) << "Encrypted Settings Length field=" << m2->encrypted_settings()->length();
     auto buf = reinterpret_cast<uint8_t *>(encrypted_settings->encrypted_settings());
     std::copy_n(config_data.getStartBuffPtr(), config_data.getLen(), buf);
     WSC::sWscAttrKeyWrapAuthenticator keywrapauth;
@@ -456,6 +460,7 @@ bool master_thread::autoconfig_wsc_add_m2_encrypted_settings(
     if (!mapf::encryption::create_iv(iv, WSC::WSC_ENCRYPTED_SETTINGS_IV_LENGTH))
         return false;
 
+    LOG(DEBUG) << "EncryptedSettings len: " << len;
     if (!mapf::encryption::aes_encrypt(keywrapkey, iv, buf, len)) {
         LOG(DEBUG) << "aes encrypt";
         return false;
@@ -622,17 +627,9 @@ bool master_thread::autoconfig_wsc_add_m2(
                   bss_info_conf->network_key.c_str() + bss_info_conf->network_key.size(),
                   config_data.network_key_attr().data);
         config_data.multiap_attr().subelement_value = bss_info_conf->bss_type;
-
-        LOG(DEBUG) << "WSC config_data:" << std::hex << std::endl
-                   << "     ssid: " << config_data.ssid() << std::endl
-                   << "     authentication_type: "
-                   << int(config_data.authentication_type_attr().data) << std::endl
-                   << "     encryption_type: " << int(config_data.encryption_type_attr().data)
-                   << std::dec << std::endl;
     } else {
         // Tear down. No need to set any parameter except the teardown bit and the MAC address.
         config_data.multiap_attr().subelement_value = WSC::eWscVendorExtSubelementBssType::TEARDOWN;
-        LOG(DEBUG) << "WSC config_data: tear down";
     }
 
     // The MAC address in the config data is tricky... According to "Wi-Fi Simple Configuration
@@ -650,8 +647,14 @@ bool master_thread::autoconfig_wsc_add_m2(
     // the closest to the WSC-specified behaviour.
     //
     // Note that the BBF 1905.1 implementation (meshComms) simply ignores the MAC address in M2.
-    config_data.bssid_attr().data = radio_basic_caps->radio_uid(); //tlvWscM1->mac_attr().data;
-
+    config_data.bssid_attr().data = tlvWscM1->mac_attr().data; //radio_basic_caps->radio_uid();
+    LOG(DEBUG) << "WSC config_data:" << std::endl
+                   << "     len: " << config_data.getLen() << std::endl
+                   << "     authentication_type: 0x"
+                   << int(config_data.authentication_type_attr().data) << std::endl
+                   << "     encryption_type: 0x" << int(config_data.encryption_type_attr().data) << std::endl
+                   << "     MAC address: " << network_utils::mac_to_string(config_data.bssid_attr().data)
+                   << std::dec << std::endl;
     config_data.class_swap();
 
     if (!autoconfig_wsc_add_m2_encrypted_settings(tlvWscM2, config_data, authkey, keywrapkey))
