@@ -1,0 +1,23 @@
+{
+"cmdu_type":
+{
+    "0x0009":
+    {
+        "name":"AP_AUTOCONFIGURATION_WSC_MESSAGE",
+        "tlv_types":
+        {
+            "M1":
+            {
+                "tlvApRadioBasicCapabilities":{"tlvType":"0x85"},
+                "tlvWscM1":"undefined"
+            },
+            "M2":
+            {
+                "tlvApRadioIdentifier":{"tlvType":"0x82"},
+                "tlvWscM2":"undefined"
+            }
+        }
+        
+    }
+}
+}
