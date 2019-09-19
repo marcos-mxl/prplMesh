@@ -672,7 +672,7 @@ def socket_server(log_file):
                 g_marker_update = False
                 sent_bytes = connection.send("marker")
             try:
-                data += connection.recv(256)
+                data += str(connection.recv(256))
             except socket.timeout:
                 logger.info("Socket timed out")
                 pass
@@ -685,8 +685,8 @@ def socket_server(log_file):
                 break
             while g_run_flag:
                 try:
-                    i=data.index('\n')
                 except:
+                    i=data.index(r'\n')
                     break
                 send_data = data.split('\n')[0]
                 data = data[i+1:]
