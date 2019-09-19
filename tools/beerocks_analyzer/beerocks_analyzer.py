@@ -676,11 +676,13 @@ def socket_server(log_file):
                 g_marker_update = False
                 sent_bytes = connection.send("marker")
             try:
-                data += str(connection.recv(256))
+                logger.debug("Trying to get data from the socket")
+                data += connection.recv(256).decode("utf-8")
             except socket.timeout:
-                logger.info("Socket timed out")
+                logger.debug("Socket timed out")
                 pass
             except KeyboardInterrupt:
+                logger.info("Keyboard interrupt, stopping")
                 run_local=False
                 break
             except Exception as e:
@@ -691,7 +693,7 @@ def socket_server(log_file):
                 break
             while g_run_flag:
                 try:
-                    i=data.index(r'\n')
+                    i=data.index('\n')
                 except Exception as e:
                     logger.debug("data.index failed: {}".format(data))
                     break
