@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from importlib.machinery import SourceFileLoader
 import logging
 import subprocess
 import sys
@@ -18,7 +19,6 @@ from os import waitpid, execv, read, write
 
 from random import randint
 import paramiko
-import imp
 import signal
 from multiprocessing import Process
 from threading import Thread
@@ -812,7 +812,7 @@ def main(argv):
                         is_conn_map_sep_win = True
                 elif arg_i.startswith("-conf="):
                     conf_file_name = arg_i.split("=")[1]
-                    conf_i = imp.load_source('module.name', "./conf/" + conf_file_name)
+                    conf_i = SourceFileLoader('module.name', "./conf/" + conf_file_name).load_module()
                     conf_i.CMD.append("-graphs")
                     conf_list.append(conf_i.CMD)
                 elif arg_i.startswith("-gw_ip="):
