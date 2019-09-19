@@ -13,8 +13,7 @@ from PySide2.QtGui import *
 import matplotlib
 from PySide2.QtWidgets import QTabWidget, QVBoxLayout, QWidget
 
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4']='PySide'
+matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
