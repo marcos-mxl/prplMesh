@@ -251,8 +251,9 @@ class BeeRocksAnalyzer(QMainWindow):
                         param_v.append(arg.replace(":","=",1).split("=")[1].strip())
                     else:
                         param_v.append(arg_val[1].strip())
-            except:
+            except Exception as e:
                 logger.error("readSample() 1 line --> {}".format(line))
+                logger.exception(e)
                 return [param_t, is_start, is_stop, is_map_update, res]
 
         if param_v == None: 
@@ -272,10 +273,11 @@ class BeeRocksAnalyzer(QMainWindow):
                     if not ("1" in param_v[i_type]):
                         i_ap_mac=param_n.index('parent bssid')
                     
-                except:
-                    logger.info("readSample()  --> {}, "
+                except Exception as e: # TODO: too broad exception
+                    logger.error("readSample()  --> {}, "
                                              "nw_map_update line does not contain state "
                                              "or mac or type or parent bssid".format(line))
+                    logger.exception(e)
                     return [param_t, is_start, is_stop, is_map_update, res]
 
                 state = (param_v[i_state].split())[0]
@@ -680,13 +682,16 @@ def socket_server(log_file):
                 run_local=False
                 break
             except Exception as e:
-                logger.error("Error when handling data from the socket_server:\n{}".format(str(e)))
+                logger.error("Error when handling data from the socket_server:\n"
+                             "{}\n"
+                             "Stopping".format(str(e)))
                 run_local=False
                 break
             while g_run_flag:
                 try:
-                except:
                     i=data.index(r'\n')
+                except Exception as e:
+                    logger.debug("data.index failed: {}".format(data))
                     break
                 send_data = data.split('\n')[0]
                 data = data[i+1:]
@@ -820,6 +825,7 @@ def main(argv):
         g_run_flag=False
 
         for t in t_list:
+            logger.debug("Joining thread {}" + str(t))
             t.join()
 
     except KeyboardInterrupt:
