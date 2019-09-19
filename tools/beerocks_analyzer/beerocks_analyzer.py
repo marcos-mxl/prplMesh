@@ -1,11 +1,14 @@
 #!/usr/bin/python
 import logging
+import subprocess
 import sys
 import os
 import ctypes
 import threading
 import socket
 import time
+from ipaddress import ip_address, IPv4Address
+from pathlib import Path
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -47,7 +50,8 @@ def printUsage():
     logger.info("    -map_win                                              - start connectivity map on a separare window")
     logger.info("    -conf=<conf_file_name>                                - run configuration from ./conf/conf_file_name")
     logger.info("                                                          - can execute with several -conf=<conf_file_name1> -conf=<conf_file_name2> ...")
-    logger.info("    -gw_ip=<IP of GW>                                     - GW ip to get updates from, default=192.168.1.1")
+    logger.info("    -gw_ip=<IP of GW>                                     - GW ip to get updates from. If empty, the GW is assumed to be running locally")
+    logger.info("    -bin_path=<path_to_beerocks_cli>                      - Path to the beerocks_cli binary. Default: '/opt/beerocks/beerocks_cli'")
     logger.info("    -my_ip=[IP of PC]                                     - PC ip to send updates, if not set will automaticly set")
     logger.info("    -ssh_port=[ssh port of GW]                            - SSH port used to connect to GW")
 
@@ -706,13 +710,42 @@ def socket_server(log_file):
 
     file.close()
 
+
+def local_start_beerocks_cli(beerocks_cli_path: Path, target_ip: IPv4Address) -> int:
+    """Start beerocks_cli locally.
+
+    Parameters
+    ----------
+    beerocks_cli_path: Path
+        The path to beerocks_cli's binary.
+    target_ip: IPv4Address
+        The IP address to send the data to. Defaults to 127.0.0.1.
+
+    Returns
+    -------
+    int
+        The return status of beerocks_cli.
+    """
+    if not beerocks_cli_path.is_file():
+        raise ValueError("Path to beerocks_cli not found: {}".format(beerocks_cli_path))
+    if not target_ip:
+        target_ip = ip_address("127.0.0.1")
+
+    command = str(beerocks_cli_path) + " -a " + str(target_ip)
+    logger.debug("Starting beerock_cli -a")
+    exit_status = subprocess.call(command.split())
+    logger.debug("beerock_cli -a exited")
+
+    return exit_status
+
+
 def ssh_start_beerocks_cli(host="192.168.1.1",my_ip="",ssh_port=22, user='admin', password='admin'):
     global g_ssh
     g_ssh = paramiko.SSHClient()
     g_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     g_ssh.connect(host, port=ssh_port, username=user, password=password, allow_agent = False)
     
-    if my_ip == "":
+    if not my_ip:
         my_ip = g_ssh.get_transport().sock.getsockname()[0]
         
     command = '/opt/beerocks/beerocks_cli -a ' + my_ip
@@ -736,7 +769,9 @@ def ssh_start_beerocks_cli(host="192.168.1.1",my_ip="",ssh_port=22, user='admin'
             in_buff = ''
     
     #execute command
+    logger.debug("Starting beerock_cli -a")
     i, o, e = g_ssh.exec_command(command)
+    logger.debug("beerock_cli -a exited")
     return o.channel.recv_exit_status()
     
 def main(argv):
@@ -744,9 +779,10 @@ def main(argv):
     signal.signal(signal.SIGINT, signal_handler)
     try:
         log_file=LOG_FILE
-        gw_ip='192.168.1.1'
-        my_ip=""
+        gw_ip=""
+        my_ip=None
         ssh_port=22
+        bin_path = Path("/opt/beerocks/beerocks_cli")
         g_ext_log_file = False
         is_conn_map = False
         is_conn_map_sep_win = False
@@ -777,6 +813,8 @@ def main(argv):
                     conf_list.append(conf_i.CMD)
                 elif arg_i.startswith("-gw_ip="):
                     gw_ip = arg_i.split("=")[1]
+                elif arg_i.startswith("-bin_path="):
+                    bin_path = Path(arg_i.split("=")[1])
                 elif arg_i.startswith("-my_ip="):
                     my_ip = arg_i.split("=")[1]
                 elif arg_i.startswith("-ssh_port="):
@@ -810,9 +848,13 @@ def main(argv):
             t = Thread(target=socket_server, args=(log_file,))
             t.start()
             t_list.append(t)
-            #beerocks_cli updates (via ssh)
+            # beerocks_cli updates (either via ssh or locally)
             time.sleep(3)
-            t = Thread(target=ssh_start_beerocks_cli, args=(gw_ip, my_ip, ssh_port))
+            if not gw_ip:
+                # running locally
+                t = Thread(target=local_start_beerocks_cli, args=(bin_path, my_ip))
+            else:
+                t = Thread(target=ssh_start_beerocks_cli, args=(gw_ip, my_ip, ssh_port))
             t.start()
             t_list.append(t)
         
