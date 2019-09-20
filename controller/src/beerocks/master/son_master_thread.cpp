@@ -15,6 +15,7 @@
 #include "tasks/load_balancer_task.h"
 #include "tasks/optimal_path_task.h"
 #include "tasks/statistics_polling_task.h"
+
 #ifdef BEEROCKS_RDKB
 #include "tasks/rdkb/rdkb_wlan_task.h"
 #endif
@@ -48,6 +49,8 @@
 #include <tlvf/wfa_map/tlvSearchedService.h>
 #include <tlvf/wfa_map/tlvSupportedService.h>
 #include <tlvf/wfa_map/tlvTransmitPowerLimit.h>
+
+#include <tlvf/CmduParser.h>
 
 #define SOCKET_MAX_CONNECTIONS 20
 #define SOCKETS_SELECT_TIMEOUT_MSEC 50
@@ -677,6 +680,8 @@ bool master_thread::handle_cmdu_1905_autoconfiguration_WSC(Socket *sd,
                                                            ieee1905_1::CmduMessageRx &cmdu_rx)
 {
     LOG(DEBUG) << "Received AP_AUTOCONFIGURATION_WSC_MESSAGE";
+
+    auto tmp = ieee1905_1::CmduParser::getAllTlvs(cmdu_rx);
 
     std::shared_ptr<wfa_map::tlvApRadioBasicCapabilities> radio_basic_caps = nullptr;
     std::shared_ptr<ieee1905_1::tlvWscM1> tlvwscM1                         = nullptr;

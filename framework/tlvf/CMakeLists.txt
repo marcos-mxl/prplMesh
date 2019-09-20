@@ -47,7 +47,7 @@ add_custom_command(
 
 add_library(tlvf SHARED ${TLVF_OUTPUTS})
 set_target_properties(tlvf PROPERTIES VERSION ${${PROJECT}_VERSION_STRING} SOVERSION ${${PROJECT}_VERSION_MAJOR})
-target_link_libraries(tlvf PRIVATE mapf::elpp)
+target_link_libraries(tlvf PRIVATE mapf::elpp json-c)
 target_include_directories(tlvf
     PUBLIC
         $<BUILD_INTERFACE:${TLVF_OUT}/include>

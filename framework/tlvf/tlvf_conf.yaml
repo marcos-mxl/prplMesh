@@ -33,6 +33,8 @@ include_source_path: {
   "src/BaseClass.cpp",
   "include/tlvf/CmduMessage.h",
   "src/CmduMessage.cpp",
+  "include/tlvf/CmduParser.h",
+  "src/CmduParser.cpp",
   "include/tlvf/CmduMessageTx.h",
   "src/CmduMessageTx.cpp",
   "include/tlvf/CmduMessageRx.h",
