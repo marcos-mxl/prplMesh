@@ -52,6 +52,7 @@ def printUsage():
     logger.info("    -bin_path=<path_to_beerocks_cli>                      - Path to the beerocks_cli binary. Default: '/opt/beerocks/beerocks_cli'")
     logger.info("    -my_ip=[IP of PC]                                     - PC ip to send updates, if not set will automaticly set")
     logger.info("    -ssh_port=[ssh port of GW]                            - SSH port used to connect to GW")
+    logger.info("    -docker_container=[name of container]                 - Name of the docker container on which to run beerocks_cli")
 
 def signal_handler(signal, frame):
     global t_list, g_run_flag
@@ -715,7 +716,7 @@ def socket_server(log_file):
     file.close()
 
 
-def local_start_beerocks_cli(beerocks_cli_path: Path, target_ip: IPv4Address) -> int:
+def local_start_beerocks_cli(beerocks_cli_path: Path, target_ip: IPv4Address, docker_container_name: str = None) -> int:
     """Start beerocks_cli locally.
 
     Parameters
@@ -724,6 +725,9 @@ def local_start_beerocks_cli(beerocks_cli_path: Path, target_ip: IPv4Address) ->
         The path to beerocks_cli's binary.
     target_ip: IPv4Address
         The IP address to send the data to. Defaults to 127.0.0.1.
+    docker_container_name: str
+        (optional) The name of the docker container on which to run beerocks_cli.
+        If None (default value), docker won't be used.
 
     Returns
     -------
@@ -734,9 +738,11 @@ def local_start_beerocks_cli(beerocks_cli_path: Path, target_ip: IPv4Address) ->
         raise ValueError("Path to beerocks_cli not found: {}".format(beerocks_cli_path))
     if not target_ip:
         target_ip = ip_address("127.0.0.1")
-
-    command = str(beerocks_cli_path) + " -a " + str(target_ip)
-    logger.debug("Starting beerock_cli -a")
+    command = ""
+    if docker_container_name:
+        command += "docker exec " + docker_container_name + " "
+    command += str(beerocks_cli_path) + " -a " + str(target_ip)
+    logger.debug(command)
     exit_status = subprocess.call(command.split())
     logger.debug("beerock_cli -a exited")
 
@@ -787,6 +793,7 @@ def main(argv):
         my_ip=None
         ssh_port=22
         bin_path = Path("/opt/beerocks/beerocks_cli")
+        docker_container = None
         g_ext_log_file = False
         is_conn_map = False
         is_conn_map_sep_win = False
@@ -823,6 +830,8 @@ def main(argv):
                     my_ip = arg_i.split("=")[1]
                 elif arg_i.startswith("-ssh_port="):
                     ssh_port = int(arg_i.split("=")[1])
+                elif arg_i.startswith("-docker_container="):
+                    docker_container = arg_i.split("=")[1]
 
         #add conn map
         if is_conn_map:
@@ -856,7 +865,7 @@ def main(argv):
             time.sleep(3)
             if not gw_ip:
                 # running locally
-                t = Thread(target=local_start_beerocks_cli, args=(bin_path, my_ip))
+                t = Thread(target=local_start_beerocks_cli, args=(bin_path, my_ip, docker_container))
             else:
                 t = Thread(target=ssh_start_beerocks_cli, args=(gw_ip, my_ip, ssh_port))
             t.start()
