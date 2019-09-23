@@ -1,3 +1,6 @@
+///////////////////////////////////////
+// AUTO GENERATED FILE - DO NOT EDIT //
+///////////////////////////////////////
 #include <tlvf/CmduParser.h>
 #include <algorithm>
 #include <vector>
