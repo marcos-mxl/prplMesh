@@ -386,7 +386,11 @@ class TlvF:
         self.loadAllYamlFilesToDB()
         self.copyIncludeSource()
         self.generateCode()
-
+        yaml_list = [
+            (self.db[('eTlvType','eTlvType')],self.tlvTypeDefaultConverter),
+            (self.db[('eTlvTypeMap','eTlvTypeMap')],self.tlvTypeDefaultConverter),
+        ]
+        switch_res = self.generateParseSwitch("cmdu_rx",yaml_list,"cmdu_rx.getNextTlvType()")
         if self.print_outputs:
             outputs = ";".join(self.generated_file_list + self.copied_file_list)
             sys.stdout.write(outputs)
@@ -1845,6 +1849,65 @@ class TlvF:
         self.logger.error(msg)
         
         sys.exit(1)
+    def tlvTypeDefaultConverter(self, input):
+        out = input.split('_')
+        out = ''.join(x for x in input.title() if x.isalnum())
+        return out[0].lower()+out[1:]
+    def tlvDefaultAddClass(self, input):
+        return f"addClass<{input}>()"
+    def generateParseSwitch(self,parsed_obj, yaml_config,switch_parameter,add_func=tlvDefaultAddClass,attr_namespace='ieee_1905_1'):
+        """
+        Parameters
+        --
+        `parsed_obj` : BaseClass
+
+            the object to run the add_func on
+
+        `yaml_config` : iterator <(yaml,converter_function)> t
+
+            Iterator of tuples, each consisting of 
+            1. a YAML file name and 
+            2. the method of enum to filename conversion
+
+        `switch_parameter` : string
+
+            the parameter on which the switch statement will be used on.
+
+        
+        `attr_conversion_funcs` : function, optional
+
+            collections of converter functions between the attribute name in the yaml to the class name.
+            defaults to `tlvTypeDefaultConverter()`
+
+        `attr_namespace` : string, optional
+
+            the namespace of the post conversion attribute name.
+            defaults to `ieee_1905_1`.
+            
+        """
+        lines_cpp = []
+        lines_cpp.append(f"switch({switch_parameter})")
+        lines_cpp.append("{")
+        for yaml, converter in yaml_config:
+            for key, val in yaml.items():
+                if key.startswith(MetaData.META_PREFIX):
+                    continue
+                lines_cpp.append(f"{self.getIndentation(1)}case ({val}):"+"{")
+                #clarification for basic case of extracting tlvs from cmdu:
+                #parsed_obj is usually cmdu_rx
+                #add_func is addClass<T>
+                #converter converts UPPER_CASE_UNDERSCORE to camelCase so TLV_END_OF_MESSAGE ->tlvEndOfMessage
+                #so the following line appends:  return {cmdu_rx}.{addClass<{ieee1905_1::tlvEndOfMessage}>()};
+                #(curly braces whenever it's a result of a function)
+                
+                lines_cpp.append(f"{self.getIndentation(2)} return {parsed_obj}.{add_func(self, attr_namespace+'::'+converter(key))};")
+                lines_cpp.append(self.getIndentation(1)+"}")
+        
+        lines_cpp.append("}")
+        return lines_cpp
+
+    
+
 
 def test(conf, output, print_dependencies, print_outputs):
     code_c = r'''
