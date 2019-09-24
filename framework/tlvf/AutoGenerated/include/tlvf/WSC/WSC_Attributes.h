@@ -365,6 +365,9 @@ typedef struct sWscAttrVendorExtMultiAp {
     uint8_t subelement_id;
     uint8_t subelement_length;
     uint8_t subelement_value;
+    uint8_t subelement2_id;
+    uint8_t subelement2_length;
+    uint8_t subelement2_value;
     void struct_swap(){
         tlvf_swap(16, reinterpret_cast<uint8_t*>(&attribute_type));
         tlvf_swap(16, reinterpret_cast<uint8_t*>(&data_length));
@@ -375,9 +378,12 @@ typedef struct sWscAttrVendorExtMultiAp {
         vendor_id_0 = WSC_VENDOR_ID_WFA_1;
         vendor_id_1 = WSC_VENDOR_ID_WFA_2;
         vendor_id_2 = WSC_VENDOR_ID_WFA_3;
-        subelement_id = 0x6;
+        subelement_id = 0x9;
         subelement_length = 0x1;
         subelement_value = TEARDOWN;
+        subelement2_id = 0x0;
+        subelement2_length = 0x1;
+        subelement2_value = WSC_VERSION2;
     }
 } __attribute__((packed)) sWscAttrVendorExtMultiAp;
 
@@ -487,9 +493,15 @@ class cConfigData : public BaseClass
         bool alloc_ssid(size_t count = 1);
         sWscAttrAuthenticationType& authentication_type_attr();
         sWscAttrEncryptionType& encryption_type_attr();
-        sWscAttrNetworkKey& network_key_attr();
         sWscAttrBssid& bssid_attr();
         sWscAttrVendorExtMultiAp& multiap_attr();
+        eWscAttributes& network_key_type();
+        uint16_t& network_key_length();
+        std::string network_key_str();
+        char* network_key(size_t length = 0);
+        bool set_network_key(const std::string& str);
+        bool set_network_key(const char buffer[], size_t size);
+        bool alloc_network_key(size_t count = 1);
         void class_swap();
         static size_t get_initial_size();
 
@@ -502,9 +514,12 @@ class cConfigData : public BaseClass
         int m_lock_order_counter__ = 0;
         sWscAttrAuthenticationType* m_authentication_type_attr = nullptr;
         sWscAttrEncryptionType* m_encryption_type_attr = nullptr;
-        sWscAttrNetworkKey* m_network_key_attr = nullptr;
         sWscAttrBssid* m_bssid_attr = nullptr;
         sWscAttrVendorExtMultiAp* m_multiap_attr = nullptr;
+        eWscAttributes* m_network_key_type = nullptr;
+        uint16_t* m_network_key_length = nullptr;
+        char* m_network_key = nullptr;
+        size_t m_network_key_idx__ = 0;
 };
 
 class cWscAttrEncryptedSettings : public BaseClass

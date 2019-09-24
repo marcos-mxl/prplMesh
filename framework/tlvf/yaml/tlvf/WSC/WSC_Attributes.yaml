@@ -284,13 +284,22 @@ sWscAttrVendorExtMultiAp:
     _value: WSC_VENDOR_ID_WFA_3
   subelement_id:
     _type: uint8_t
-    _value: 0x6
+    _value: 0x9
   subelement_length:
     _type: uint8_t
     _value: 0x1
   subelement_value:
     _type: uint8_t
     _value: TEARDOWN
+  subelement2_id:
+    _type: uint8_t
+    _value: 0x0
+  subelement2_length:
+    _type: uint8_t
+    _value: 0x1
+  subelement2_value:
+    _type: uint8_t
+    _value: WSC_VERSION2
 
 sWscAttrKeyWrapAuthenticator:
   _type: struct
@@ -379,9 +388,17 @@ cConfigData:
     _length_max: WSC_MAX_SSID_LENGTH
   authentication_type_attr: sWscAttrAuthenticationType
   encryption_type_attr: sWscAttrEncryptionType
-  network_key_attr: sWscAttrNetworkKey
   bssid_attr: sWscAttrBssid
   multiap_attr: sWscAttrVendorExtMultiAp
+  network_key_type:
+    _type: eWscAttributes
+    _value: ATTR_NETWORK_KEY
+  network_key_length:
+    _type: uint16_t
+    _length_var: True
+  network_key:
+    _type: char
+    _length: [ network_key_length ]
 
 cWscAttrEncryptedSettings:
   _type: class
