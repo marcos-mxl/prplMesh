@@ -674,7 +674,7 @@ def socket_server(log_file):
                 data += connection.recv(256).decode("utf-8")
             except socket.timeout:
                 logger.debug("Socket timed out")
-                pass
+                continue
             except KeyboardInterrupt:
                 logger.info("Keyboard interrupt, stopping")
                 run_local=False
