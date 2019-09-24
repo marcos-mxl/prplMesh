@@ -24,7 +24,7 @@ debug_disable_arp=0
 [backhaul]
 backhaul_preferred_bssid=
 backhaul_wire_iface_type=ETHERNET
-backhaul_wire_iface=@BEEROCKS_BH_WIRE_IFACE@
+backhaul_wire_iface=enx00ee22aa28ef
 
 [agent0]
 radio_identifier=00:00:00:00:00:00

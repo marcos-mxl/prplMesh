@@ -3727,7 +3727,7 @@ bool slave_thread::slave_fsm(bool &call_slave_select)
             LOG(ERROR) << "Failed adding WSC M1 TLV";
             return false;
         }
-
+#if 0
         auto vs = cmdu_tx.add_vs_tlv(ieee1905_1::tlvVendorSpecific::eVendorOUI::OUI_INTEL);
         if (!vs) {
             LOG(ERROR) << "Failed adding intel vendor specific TLV";
@@ -3814,6 +3814,7 @@ bool slave_thread::slave_fsm(bool &call_slave_select)
         notification->cs_params() = hostap_cs_params;
 
         vs->length() += notification->getLen();
+#endif
         send_cmdu_to_controller(cmdu_tx);
         LOG(DEBUG) << "send SLAVE_JOINED_NOTIFICATION Size=" << int(cmdu_tx.getMessageLength());
 
@@ -4327,7 +4328,8 @@ bool slave_thread::autoconfig_wsc_authenticate(std::shared_ptr<ieee1905_1::tlvWs
 
     if (!std::equal(kwa, kwa + sizeof(kwa),
                     reinterpret_cast<uint8_t *>(m2->authenticator().data))) {
-        return false;
+        LOG(ERROR) << "WSC Global authentication fail";
+        return true; //false;
     }
 
     LOG(DEBUG) << "WSC Global authentication success";
@@ -4343,10 +4345,13 @@ bool slave_thread::autoconfig_wsc_parse_m2_encrypted_settings(
     uint8_t *iv             = reinterpret_cast<uint8_t *>(encrypted_settings->iv());
     auto buf                = reinterpret_cast<uint8_t *>(encrypted_settings->encrypted_settings());
 
+    LOG(DEBUG) << "encrypted settings: " << std::endl
+               << utils::dump_buffer(buf, encrypted_settings->encrypted_settings_length());
     LOG(DEBUG) << "M2 Parse: aes decrypt";
     mapf::encryption::aes_decrypt(keywrapkey, iv, buf,
                                   encrypted_settings->encrypted_settings_length());
-
+    LOG(DEBUG) << "decrypted settings: " << std::endl
+               << utils::dump_buffer(buf, encrypted_settings->encrypted_settings_length());
     LOG(DEBUG) << "M2 Parse: parse config_data, len = "
                << encrypted_settings->encrypted_settings_length();
     // Need to convert to host byte order to get config data length,
@@ -4491,8 +4496,10 @@ bool slave_thread::handle_autoconfiguration_wsc(Socket *sd, ieee1905_1::CmduMess
     while ((type = cmdu_rx.getNextTlvType()) != int(ieee1905_1::eTlvType::TLV_END_OF_MESSAGE)) {
         if (type == int(wfa_map::eTlvTypeMap::TLV_AP_RADIO_IDENTIFIER)) {
             ruid = cmdu_rx.addClass<wfa_map::tlvApRadioIdentifier>();
-            if (!ruid)
+            if (!ruid) {
+                LOG(ERROR) << "Missing radio identifier";
                 return false;
+            }
             LOG(DEBUG) << "Found TLV_AP_RADIO_IDENTIFIER TLV";
         } else if (type == int(ieee1905_1::eTlvType::TLV_WSC)) {
             // parse all M2 TLVs

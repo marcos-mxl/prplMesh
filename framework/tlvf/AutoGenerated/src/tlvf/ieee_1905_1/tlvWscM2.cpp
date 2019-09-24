@@ -146,12 +146,14 @@ bool tlvWscM2::alloc_manufacturer(size_t count) {
     m_serial_number_length = (uint16_t *)((uint8_t *)(m_serial_number_length) + len);
     m_serial_number = (char *)((uint8_t *)(m_serial_number) + len);
     m_primary_device_type_attr = (WSC::sWscAttrPrimaryDeviceType *)((uint8_t *)(m_primary_device_type_attr) + len);
+    m_device_name_type = (WSC::eWscAttributes *)((uint8_t *)(m_device_name_type) + len);
+    m_device_name_length = (uint16_t *)((uint8_t *)(m_device_name_length) + len);
+    m_device_name = (char *)((uint8_t *)(m_device_name) + len);
     m_rf_bands_attr = (WSC::sWscAttrRfBands *)((uint8_t *)(m_rf_bands_attr) + len);
     m_association_state_attr = (WSC::sWscAttrAssociationState *)((uint8_t *)(m_association_state_attr) + len);
     m_configuration_error_attr = (WSC::sWscAttrConfigurationError *)((uint8_t *)(m_configuration_error_attr) + len);
     m_device_password_id_attr = (WSC::sWscAttrDevicePasswordID *)((uint8_t *)(m_device_password_id_attr) + len);
     m_os_version_attr = (WSC::sWscAttrOsVersion *)((uint8_t *)(m_os_version_attr) + len);
-    m_version2_attr = (WSC::sWscAttrVersion2 *)((uint8_t *)(m_version2_attr) + len);
     m_encrypted_settings = (WSC::cWscAttrEncryptedSettings *)((uint8_t *)(m_encrypted_settings) + len);
     m_authenticator = (WSC::sWscAttrAuthenticator *)((uint8_t *)(m_authenticator) + len);
     m_manufacturer_idx__ += count;
@@ -231,12 +233,14 @@ bool tlvWscM2::alloc_model_name(size_t count) {
     m_serial_number_length = (uint16_t *)((uint8_t *)(m_serial_number_length) + len);
     m_serial_number = (char *)((uint8_t *)(m_serial_number) + len);
     m_primary_device_type_attr = (WSC::sWscAttrPrimaryDeviceType *)((uint8_t *)(m_primary_device_type_attr) + len);
+    m_device_name_type = (WSC::eWscAttributes *)((uint8_t *)(m_device_name_type) + len);
+    m_device_name_length = (uint16_t *)((uint8_t *)(m_device_name_length) + len);
+    m_device_name = (char *)((uint8_t *)(m_device_name) + len);
     m_rf_bands_attr = (WSC::sWscAttrRfBands *)((uint8_t *)(m_rf_bands_attr) + len);
     m_association_state_attr = (WSC::sWscAttrAssociationState *)((uint8_t *)(m_association_state_attr) + len);
     m_configuration_error_attr = (WSC::sWscAttrConfigurationError *)((uint8_t *)(m_configuration_error_attr) + len);
     m_device_password_id_attr = (WSC::sWscAttrDevicePasswordID *)((uint8_t *)(m_device_password_id_attr) + len);
     m_os_version_attr = (WSC::sWscAttrOsVersion *)((uint8_t *)(m_os_version_attr) + len);
-    m_version2_attr = (WSC::sWscAttrVersion2 *)((uint8_t *)(m_version2_attr) + len);
     m_encrypted_settings = (WSC::cWscAttrEncryptedSettings *)((uint8_t *)(m_encrypted_settings) + len);
     m_authenticator = (WSC::sWscAttrAuthenticator *)((uint8_t *)(m_authenticator) + len);
     m_model_name_idx__ += count;
@@ -313,12 +317,14 @@ bool tlvWscM2::alloc_model_number(size_t count) {
     m_serial_number_length = (uint16_t *)((uint8_t *)(m_serial_number_length) + len);
     m_serial_number = (char *)((uint8_t *)(m_serial_number) + len);
     m_primary_device_type_attr = (WSC::sWscAttrPrimaryDeviceType *)((uint8_t *)(m_primary_device_type_attr) + len);
+    m_device_name_type = (WSC::eWscAttributes *)((uint8_t *)(m_device_name_type) + len);
+    m_device_name_length = (uint16_t *)((uint8_t *)(m_device_name_length) + len);
+    m_device_name = (char *)((uint8_t *)(m_device_name) + len);
     m_rf_bands_attr = (WSC::sWscAttrRfBands *)((uint8_t *)(m_rf_bands_attr) + len);
     m_association_state_attr = (WSC::sWscAttrAssociationState *)((uint8_t *)(m_association_state_attr) + len);
     m_configuration_error_attr = (WSC::sWscAttrConfigurationError *)((uint8_t *)(m_configuration_error_attr) + len);
     m_device_password_id_attr = (WSC::sWscAttrDevicePasswordID *)((uint8_t *)(m_device_password_id_attr) + len);
     m_os_version_attr = (WSC::sWscAttrOsVersion *)((uint8_t *)(m_os_version_attr) + len);
-    m_version2_attr = (WSC::sWscAttrVersion2 *)((uint8_t *)(m_version2_attr) + len);
     m_encrypted_settings = (WSC::cWscAttrEncryptedSettings *)((uint8_t *)(m_encrypted_settings) + len);
     m_authenticator = (WSC::sWscAttrAuthenticator *)((uint8_t *)(m_authenticator) + len);
     m_model_number_idx__ += count;
@@ -392,12 +398,14 @@ bool tlvWscM2::alloc_serial_number(size_t count) {
         std::copy_n(src, move_length, dst);
     }
     m_primary_device_type_attr = (WSC::sWscAttrPrimaryDeviceType *)((uint8_t *)(m_primary_device_type_attr) + len);
+    m_device_name_type = (WSC::eWscAttributes *)((uint8_t *)(m_device_name_type) + len);
+    m_device_name_length = (uint16_t *)((uint8_t *)(m_device_name_length) + len);
+    m_device_name = (char *)((uint8_t *)(m_device_name) + len);
     m_rf_bands_attr = (WSC::sWscAttrRfBands *)((uint8_t *)(m_rf_bands_attr) + len);
     m_association_state_attr = (WSC::sWscAttrAssociationState *)((uint8_t *)(m_association_state_attr) + len);
     m_configuration_error_attr = (WSC::sWscAttrConfigurationError *)((uint8_t *)(m_configuration_error_attr) + len);
     m_device_password_id_attr = (WSC::sWscAttrDevicePasswordID *)((uint8_t *)(m_device_password_id_attr) + len);
     m_os_version_attr = (WSC::sWscAttrOsVersion *)((uint8_t *)(m_os_version_attr) + len);
-    m_version2_attr = (WSC::sWscAttrVersion2 *)((uint8_t *)(m_version2_attr) + len);
     m_encrypted_settings = (WSC::cWscAttrEncryptedSettings *)((uint8_t *)(m_encrypted_settings) + len);
     m_authenticator = (WSC::sWscAttrAuthenticator *)((uint8_t *)(m_authenticator) + len);
     m_serial_number_idx__ += count;
@@ -409,6 +417,83 @@ bool tlvWscM2::alloc_serial_number(size_t count) {
 
 WSC::sWscAttrPrimaryDeviceType& tlvWscM2::primary_device_type_attr() {
     return (WSC::sWscAttrPrimaryDeviceType&)(*m_primary_device_type_attr);
+}
+
+WSC::eWscAttributes& tlvWscM2::device_name_type() {
+    return (WSC::eWscAttributes&)(*m_device_name_type);
+}
+
+uint16_t& tlvWscM2::device_name_length() {
+    return (uint16_t&)(*m_device_name_length);
+}
+
+std::string tlvWscM2::device_name_str() {
+    char *device_name_ = device_name();
+    if (!device_name_) { return std::string(); }
+    return std::string(device_name_, m_device_name_idx__);
+}
+
+char* tlvWscM2::device_name(size_t length) {
+    if( (m_device_name_idx__ <= 0) || (m_device_name_idx__ < length) ) {
+        TLVF_LOG(ERROR) << "device_name length is smaller than requested length";
+        return nullptr;
+    }
+    return ((char*)m_device_name);
+}
+
+bool tlvWscM2::set_device_name(const std::string& str) {
+    size_t str_size = str.size();
+    if (str_size == 0) {
+        TLVF_LOG(WARNING) << "set_device_name received an empty string.";
+        return false;
+    }
+    if (!alloc_device_name(str_size + 1)) { return false; } // +1 for null terminator
+    tlvf_copy_string(m_device_name, str.c_str(), str_size + 1);
+    return true;
+}
+bool tlvWscM2::set_device_name(const char str[], size_t size) {
+    if (str == nullptr || size == 0) { 
+        TLVF_LOG(WARNING) << "set_device_name received an empty string.";
+        return false;
+    }
+    if (!alloc_device_name(size + 1)) { return false; } // +1 for null terminator
+    tlvf_copy_string(m_device_name, str, size + 1);
+    m_device_name[size] = '\0';
+    return true;
+}
+bool tlvWscM2::alloc_device_name(size_t count) {
+    if (m_lock_order_counter__ > 4) {;
+        TLVF_LOG(ERROR) << "Out of order allocation for variable length list device_name, abort!";
+        return false;
+    }
+    if (count == 0) {
+        TLVF_LOG(WARNING) << "can't allocate 0 bytes";
+        return false;
+    }
+    size_t len = sizeof(char) * count;
+    if(getBuffRemainingBytes() < len )  {
+        TLVF_LOG(ERROR) << "Not enough available space on buffer - can't allocate";
+        return false;
+    }
+    m_lock_order_counter__ = 4;
+    uint8_t *src = (uint8_t *)&m_device_name[*m_device_name_length];
+    uint8_t *dst = src + len;
+    if (!m_parse__) {
+        size_t move_length = getBuffRemainingBytes(src) - len;
+        std::copy_n(src, move_length, dst);
+    }
+    m_rf_bands_attr = (WSC::sWscAttrRfBands *)((uint8_t *)(m_rf_bands_attr) + len);
+    m_association_state_attr = (WSC::sWscAttrAssociationState *)((uint8_t *)(m_association_state_attr) + len);
+    m_configuration_error_attr = (WSC::sWscAttrConfigurationError *)((uint8_t *)(m_configuration_error_attr) + len);
+    m_device_password_id_attr = (WSC::sWscAttrDevicePasswordID *)((uint8_t *)(m_device_password_id_attr) + len);
+    m_os_version_attr = (WSC::sWscAttrOsVersion *)((uint8_t *)(m_os_version_attr) + len);
+    m_encrypted_settings = (WSC::cWscAttrEncryptedSettings *)((uint8_t *)(m_encrypted_settings) + len);
+    m_authenticator = (WSC::sWscAttrAuthenticator *)((uint8_t *)(m_authenticator) + len);
+    m_device_name_idx__ += count;
+    *m_device_name_length += count;
+    m_buff_ptr__ += len;
+    if(m_length){ (*m_length) += len; }
+    return true;
 }
 
 WSC::sWscAttrRfBands& tlvWscM2::rf_bands_attr() {
@@ -431,12 +516,8 @@ WSC::sWscAttrOsVersion& tlvWscM2::os_version_attr() {
     return (WSC::sWscAttrOsVersion&)(*m_os_version_attr);
 }
 
-WSC::sWscAttrVersion2& tlvWscM2::version2_attr() {
-    return (WSC::sWscAttrVersion2&)(*m_version2_attr);
-}
-
 std::shared_ptr<WSC::cWscAttrEncryptedSettings> tlvWscM2::create_encrypted_settings() {
-    if (m_lock_order_counter__ > 4) {
+    if (m_lock_order_counter__ > 5) {
         TLVF_LOG(ERROR) << "Out of order allocation for variable length list encrypted_settings, abort!";
         return nullptr;
     }
@@ -445,7 +526,7 @@ std::shared_ptr<WSC::cWscAttrEncryptedSettings> tlvWscM2::create_encrypted_setti
         TLVF_LOG(ERROR) << "Not enough available space on buffer";
         return nullptr;
     }
-    m_lock_order_counter__ = 4;
+    m_lock_order_counter__ = 5;
     m_lock_allocation__ = true;
     uint8_t *src = (uint8_t *)m_encrypted_settings;
     if (!m_parse__) {
@@ -510,12 +591,13 @@ void tlvWscM2::class_swap()
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_serial_number_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_serial_number_length));
     m_primary_device_type_attr->struct_swap();
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_device_name_type));
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_device_name_length));
     m_rf_bands_attr->struct_swap();
     m_association_state_attr->struct_swap();
     m_configuration_error_attr->struct_swap();
     m_device_password_id_attr->struct_swap();
     m_os_version_attr->struct_swap();
-    m_version2_attr->struct_swap();
     if (m_encrypted_settings_ptr) { m_encrypted_settings_ptr->class_swap(); }
     m_authenticator->struct_swap();
 }
@@ -544,12 +626,13 @@ size_t tlvWscM2::get_initial_size()
     class_size += sizeof(WSC::eWscAttributes); // serial_number_type
     class_size += sizeof(uint16_t); // serial_number_length
     class_size += sizeof(WSC::sWscAttrPrimaryDeviceType); // primary_device_type_attr
+    class_size += sizeof(WSC::eWscAttributes); // device_name_type
+    class_size += sizeof(uint16_t); // device_name_length
     class_size += sizeof(WSC::sWscAttrRfBands); // rf_bands_attr
     class_size += sizeof(WSC::sWscAttrAssociationState); // association_state_attr
     class_size += sizeof(WSC::sWscAttrConfigurationError); // configuration_error_attr
     class_size += sizeof(WSC::sWscAttrDevicePasswordID); // device_password_id_attr
     class_size += sizeof(WSC::sWscAttrOsVersion); // os_version_attr
-    class_size += sizeof(WSC::sWscAttrVersion2); // version2_attr
     class_size += sizeof(WSC::sWscAttrAuthenticator); // authenticator
     return class_size;
 }
@@ -662,6 +745,19 @@ bool tlvWscM2::init()
     m_buff_ptr__ += sizeof(WSC::sWscAttrPrimaryDeviceType) * 1;
     if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrPrimaryDeviceType); }
     if (!m_parse__) { m_primary_device_type_attr->struct_init(); }
+    m_device_name_type = (WSC::eWscAttributes*)m_buff_ptr__;
+    if (!m_parse__) *m_device_name_type = WSC::ATTR_DEV_NAME;
+    m_buff_ptr__ += sizeof(WSC::eWscAttributes) * 1;
+    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::eWscAttributes); }
+    m_device_name_length = (uint16_t*)m_buff_ptr__;
+    if (!m_parse__) *m_device_name_length = 0;
+    m_buff_ptr__ += sizeof(uint16_t) * 1;
+    if(m_length && !m_parse__){ (*m_length) += sizeof(uint16_t); }
+    m_device_name = (char*)m_buff_ptr__;
+    uint16_t device_name_length = *m_device_name_length;
+    if (m_parse__ && m_swap__) {  tlvf_swap(16, reinterpret_cast<uint8_t*>(&device_name_length)); }
+    m_device_name_idx__ = device_name_length;
+    m_buff_ptr__ += sizeof(char)*(device_name_length);
     m_rf_bands_attr = (WSC::sWscAttrRfBands*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrRfBands) * 1;
     if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrRfBands); }
@@ -682,10 +778,6 @@ bool tlvWscM2::init()
     m_buff_ptr__ += sizeof(WSC::sWscAttrOsVersion) * 1;
     if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrOsVersion); }
     if (!m_parse__) { m_os_version_attr->struct_init(); }
-    m_version2_attr = (WSC::sWscAttrVersion2*)m_buff_ptr__;
-    m_buff_ptr__ += sizeof(WSC::sWscAttrVersion2) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrVersion2); }
-    if (!m_parse__) { m_version2_attr->struct_init(); }
     m_encrypted_settings = (WSC::cWscAttrEncryptedSettings*)m_buff_ptr__;
     if (m_parse__) {
         auto encrypted_settings = create_encrypted_settings();
