@@ -258,7 +258,7 @@ VERBOSE=false
 PLATFORM_INIT=true
 DELETE_LOGS=false
 CONTROL_IFACE=enp0s25
-DATA_IFACE=enx00ee22aa28ef
+DATA_IFACE=enx00051bc0bcfa
 PRPLMESH_MODE="CA" # CA = Controller & Agent, A = Agent only, C = Controller only
 
 main $@
