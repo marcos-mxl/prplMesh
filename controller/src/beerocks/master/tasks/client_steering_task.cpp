@@ -13,6 +13,7 @@
 
 #include <beerocks/bcl/network/network_utils.h>
 #include <easylogging++.h>
+#include <tlvf/wfa_map/tlvClientAssociationControlRequest.h>
 
 using namespace beerocks;
 using namespace net;
@@ -92,20 +93,36 @@ void client_steering_task::steer_sta()
     }
 
     std::string radio_mac = database.get_node_parent_radio(hostap_mac);
+    auto current_ap_mac   = database.get_node_parent(sta_mac);
 
-    auto request =
-        message_com::create_vs_message<beerocks_message::cACTION_CONTROL_CLIENT_ALLOW_REQUEST>(
-            cmdu_tx, id);
-
-    if (request == nullptr) {
-        LOG(ERROR) << "Failed building ACTION_CONTROL_CLIENT_ALLOW_REQUEST message!";
+    // Send 17.1.27	Client Association Control Request
+    if (!cmdu_tx.create(0, ieee1905_1::eMessageType::CLIENT_ASSOCIATION_CONTROL_REQUEST_MESSAGE)) {
+        LOG(ERROR)
+            << "cmdu creation of type CLIENT_ASSOCIATION_CONTROL_REQUEST_MESSAGE, has failed";
         return;
     }
-    request->mac()  = network_utils::mac_from_string(sta_mac);
-    request->ipv4() = network_utils::ipv4_from_string(database.get_node_ipv4(sta_mac));
-    Socket *sd      = database.get_node_socket(radio_mac);
-    TASK_LOG(DEBUG) << "sending allow request for " << sta_mac << " to " << radio_mac
-                    << " id=" << int(id);
+
+    auto association_control_request_tlv =
+        cmdu_tx.addClass<wfa_map::tlvClientAssociationControlRequest>();
+    if (!association_control_request_tlv) {
+        LOG(ERROR) << "addClass wfa_map::tlvClientAssociationControlRequest failed";
+        return;
+    }
+
+    association_control_request_tlv->alloc_sta_list();
+    auto sta_list         = association_control_request_tlv->sta_list(0);
+    std::get<1>(sta_list) = network_utils::mac_from_string(sta_mac);
+    association_control_request_tlv->bssid_to_block_client() =
+        network_utils::mac_from_string(current_ap_mac);
+    association_control_request_tlv->validity_period_sec() = disassoc_timer;
+    association_control_request_tlv->association_control() =
+        wfa_map::tlvClientAssociationControlRequest::BLOCK;
+
+    //TODO: Add a new vendor-specific TLV to include ipv4 ?
+    // request->ipv4() = network_utils::ipv4_from_string(database.get_node_ipv4(sta_mac));
+    Socket *sd = database.get_node_socket(radio_mac);
+    TASK_LOG(DEBUG) << "sending Client Association Control Request for " << sta_mac << " to "
+                    << radio_mac << " id=" << int(id);
     son_actions::send_cmdu_to_agent(sd, cmdu_tx, radio_mac);
 
     // update bml listeners
@@ -195,8 +212,6 @@ void client_steering_task::steer_sta()
         TASK_LOG(DEBUG) << "diassoc_imminent disabled";
         bss_steer_request->params().disassoc_imminent = 0;
     }
-
-    auto current_ap_mac = database.get_node_parent(sta_mac);
 
     sd = database.get_node_socket(current_ap_mac);
     son_actions::send_cmdu_to_agent(sd, cmdu_tx, original_radio_mac);
