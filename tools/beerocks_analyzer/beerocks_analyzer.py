@@ -10,6 +10,7 @@ import socket
 import time
 from ipaddress import ip_address, IPv4Address
 from pathlib import Path
+from typing import Union
 
 from PySide2.QtCore import *
 from PySide2.QtGui import *
@@ -30,7 +31,6 @@ VERSION="3.3"
 
 t_list=[]
 g_run_flag=True
-g_ssh=None
 g_ext_log_file=False
 g_marker_update=False
 LOG_FILE="beerocks_analyzer.log"
@@ -57,7 +57,7 @@ def printUsage():
 def signal_handler(signal, frame):
     global t_list, g_run_flag
 
-    logger.info("Signal received: " + str(signal))
+    logger.info("Signal {} received \n terminating".format(str(signal)))
     for t in t_list:
         try:
             t.terminate()
@@ -65,10 +65,7 @@ def signal_handler(signal, frame):
             logger.warning("Exception when trying to terminate thread: " + str(e))
             pass
     g_run_flag=False
-
-    global g_ssh
-    if g_ssh != None:
-        g_ssh.close()
+    QApplication.quit()
 
 class UpdateSig(QObject):
     sig = Signal(float)
@@ -632,147 +629,176 @@ def show():
     bra.show()
     app.exec_()
 
-def socket_server(log_file):
-    global g_run_flag, g_marker_update
-    # Create a TCP/IP socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Bind the socket to the port
-    server_address = ('', 10000)
-    try:
-        logger.info("starting up on {a[0]} port {a[1]}".format(a=server_address))
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(server_address)
-    except Exception as e: # TODO: too broad exception
-        logger.error("could not start up on {a[0]} port {a[1]}:\n{e}".format(a=server_address, e=e))
-        return
+class SocketServerThread(threading.Thread):
 
-    # Listen for incoming connections
-    sock.listen(1)
+    def __init__(self, log_file):
+        super().__init__()
+        self.log_file = log_file
+        self.run_local = True
 
-    #open log file
-    file = open(log_file,'w') 
+    def run(self):
+        global g_run_flag, g_marker_update
+        # Create a TCP/IP socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    run_local=True
-    while g_run_flag and run_local:
-        # Wait for a connection
-        logger.info('waiting for a connection...')
-        connection, client_address = sock.accept()
-        connection.settimeout(5)
-        startTime = time.time()
+        # Bind the socket to the port
+        server_address = ('', 10000)
+        try:
+            logger.info("starting up on {a[0]} port {a[1]}".format(a=server_address))
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(server_address)
+        except Exception as e: # TODO: too broad exception
+            logger.error("could not start up on {a[0]} port {a[1]}:\n{e}".format(a=server_address, e=e))
+            return
 
-        logger.info("connection from {}".format(client_address))
-        file.write( '%.3f|START\n' % (time.time() - startTime))
-        file.flush()
-        # Receive the data in chunks
-        data = ""
-        while g_run_flag:
-            if g_marker_update:
-                g_marker_update = False
-                sent_bytes = connection.send("marker")
-            try:
-                logger.debug("Trying to get data from the socket")
-                data += connection.recv(256).decode("utf-8")
-            except socket.timeout:
-                logger.debug("Socket timed out")
-                continue
-            except KeyboardInterrupt:
-                logger.info("Keyboard interrupt, stopping")
-                run_local=False
-                break
-            except Exception as e:
-                logger.error("Error when handling data from the socket_server:\n"
-                             "{}\n"
-                             "Stopping".format(str(e)))
-                run_local=False
-                break
-            while g_run_flag:
+        # Listen for incoming connections
+        sock.listen(1)
+
+        #open log file
+        file = open(self.log_file,'w')
+
+        while g_run_flag and self.run_local:
+            # Wait for a connection
+            logger.info('waiting for a connection...')
+            connection, client_address = sock.accept()
+            connection.settimeout(5)
+            startTime = time.time()
+
+            logger.info("connection from {}".format(client_address))
+            file.write( '%.3f|START\n' % (time.time() - startTime))
+            file.flush()
+            # Receive the data in chunks
+            data = ""
+            while g_run_flag and self.run_local:
+                if g_marker_update:
+                    g_marker_update = False
+                    sent_bytes = connection.send("marker")
                 try:
-                    i=data.index('\n')
-                except Exception as e:
-                    logger.debug("data.index failed: {}".format(data))
+                    logger.debug("Trying to get data from the socket")
+                    data += connection.recv(256).decode("utf-8")
+                except socket.timeout:
+                    logger.debug("Socket timed out")
+                    continue
+                except KeyboardInterrupt:
+                    logger.info("Keyboard interrupt, stopping")
+                    self.run_local=False
                     break
-                send_data = data.split('\n')[0]
-                data = data[i+1:]
-                if send_data:
-                    file.write(('%.3f|' % (time.time() - startTime)) + send_data + '\n')
-                    file.flush()
+                except Exception as e:
+                    logger.error("Error when handling data from the socket_server:\n"
+                                 "{}\n"
+                                 "Stopping".format(str(e)))
+                    self.run_local=False
+                    break
+                while g_run_flag and self.run_local:
+                    try:
+                        i=data.index('\n')
+                    except Exception as e:
+                        logger.debug("data.index failed: {}".format(data))
+                        break
+                    send_data = data.split('\n')[0]
+                    data = data[i+1:]
+                    if send_data:
+                        file.write(('%.3f|' % (time.time() - startTime)) + send_data + '\n')
+                        file.flush()
 
-    # Clean up the connection
-    connection.close()
-    file.write('%.3f|STOP\n' % (time.time() - startTime))
-    file.flush()
+            # Clean up the connection
+            connection.close()
+            file.write('%.3f|STOP\n' % (time.time() - startTime))
+            file.flush()
 
-    file.close()
-
-
-def local_start_beerocks_cli(beerocks_cli_path: Path, target_ip: IPv4Address, docker_container_name: str = None) -> int:
-    """Start beerocks_cli locally.
-
-    Parameters
-    ----------
-    beerocks_cli_path: Path
-        The path to beerocks_cli's binary.
-    target_ip: IPv4Address
-        The IP address to send the data to. Defaults to 127.0.0.1.
-    docker_container_name: str
-        (optional) The name of the docker container on which to run beerocks_cli.
-        If None (default value), docker won't be used.
-
-    Returns
-    -------
-    int
-        The return status of beerocks_cli.
-    """
-    if not beerocks_cli_path.is_file():
-        raise ValueError("Path to beerocks_cli not found: {}".format(beerocks_cli_path))
-    if not target_ip:
-        target_ip = ip_address("127.0.0.1")
-    command = ""
-    if docker_container_name:
-        command += "docker exec " + docker_container_name + " "
-    command += str(beerocks_cli_path) + " -a " + str(target_ip)
-    logger.debug(command)
-    exit_status = subprocess.call(command.split())
-    logger.debug("beerock_cli -a exited")
-
-    return exit_status
+        file.close()
+    def terminate(self):
+        self.run_local = False
 
 
-def ssh_start_beerocks_cli(host="192.168.1.1",my_ip="",ssh_port=22, user='admin', password='admin'):
-    global g_ssh
-    g_ssh = paramiko.SSHClient()
-    g_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    g_ssh.connect(host, port=ssh_port, username=user, password=password, allow_agent = False)
-    
-    if not my_ip:
-        my_ip = g_ssh.get_transport().sock.getsockname()[0]
-        
-    command = '/opt/beerocks/beerocks_cli -a ' + my_ip
+class BeerocksCliThread(threading.Thread):
 
-    #create ssh shell
-    ssh_shell = g_ssh.invoke_shell()
+    def __init__(self, beerocks_cli_path: Path, target_ip: IPv4Address, docker_container_name: str = None):
+        """Thread to start beerocks_cli locally.
 
-    #establish connection
-    in_buff = ''
-    while not in_buff.endswith(':~# '):
-        in_buff += ssh_shell.recv(9999)
-        if in_buff.endswith('password: '): 
-            time.sleep(3)
-            logger.info("ssh_command()  --> got 'password:', sending password...")
-            ssh_shell.send(password + '\n')
-            in_buff = ''
-        elif 'are you sure you want to continue connecting' in in_buff:
-            time.sleep(3)
-            logger.info("ssh_command()  --> got 'are you sure you want to continue connecting', sending 'yes'...")
-            ssh_shell.send('yes\n')
-            in_buff = ''
-    
-    #execute command
-    logger.debug("Starting beerock_cli -a")
-    i, o, e = g_ssh.exec_command(command)
-    logger.debug("beerock_cli -a exited")
-    return o.channel.recv_exit_status()
+        Parameters
+        ----------
+        beerocks_cli_path: Path
+            The path to beerocks_cli's binary.
+        target_ip: IPv4Address
+            The IP address to send the data to. Defaults to 127.0.0.1.
+        docker_container_name: str
+            (optional) The name of the docker container on which to run beerocks_cli.
+            If None (default value), docker won't be used.
+        """
+        super().__init__()
+        self.logger = logging.getLogger(__name__)
+        self.beerocks_cli_path = beerocks_cli_path
+        self.target_ip = target_ip
+        self.docker_container_name = docker_container_name
+        self.process: Union[None, subprocess.Popen] = None
+        self.running = False
+
+    def run(self):
+        if not self.beerocks_cli_path.is_file():
+            raise ValueError("Path to beerocks_cli not found: {}".format(self.beerocks_cli_path))
+        if not self.target_ip:
+            target_ip = ip_address("127.0.0.1")
+        self.running = True
+        command = ""
+        if self.docker_container_name:
+            command += "docker exec " + self.docker_container_name + " "
+        command += str(self.beerocks_cli_path) + " -a " + str(self.target_ip)
+        self.logger.debug(command)
+        self.process = subprocess.Popen(command.split())
+
+    def terminate(self):
+        self.logger.debug("{} terminating".format(self.__class__.__name__))
+        self.process.kill()
+        self.running = False
+
+class SSHThread(threading.Thread):
+
+    def __init__(self, host="192.168.1.1", my_ip="", ssh_port=22, user='admin', password='admin'):
+        super().__init__()
+        self.host = host
+        self.my_ip = my_ip
+        self.ssh_port = ssh_port
+        self.user = user
+        self.password = password
+
+    def run(self):
+        self.ssh_client = paramiko.SSHClient()
+        self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.ssh_client.connect(self.host, port=self.ssh_port, username=self.user, password=self.password, allow_agent = False)
+
+        if not self.my_ip:
+            my_ip = self.ssh_client.get_transport().sock.getsockname()[0]
+
+        command = '/opt/beerocks/beerocks_cli -a ' + my_ip
+
+        #create ssh shell
+        ssh_shell = self.ssh_client.invoke_shell()
+
+        #establish connection
+        in_buff = ''
+        while not in_buff.endswith(':~# '):
+            in_buff += ssh_shell.recv(9999)
+            if in_buff.endswith('password: '):
+                time.sleep(3)
+                logger.info("ssh_command()  --> got 'password:', sending password...")
+                ssh_shell.send(self.password + '\n')
+                in_buff = ''
+            elif 'are you sure you want to continue connecting' in in_buff:
+                time.sleep(3)
+                logger.info("ssh_command()  --> got 'are you sure you want to continue connecting', sending 'yes'...")
+                ssh_shell.send('yes\n')
+                in_buff = ''
+
+        #execute command
+        logger.debug("Starting beerock_cli -a")
+        i, o, e = self.ssh_client.exec_command(command)
+        logger.debug("beerock_cli -a exited")
+        return o.channel.recv_exit_status()
+
+    def terminate(self):
+        self.ssh_client.close()
     
 def main(argv):
     global t_list, g_run_flag, g_ext_log_file
@@ -848,16 +874,18 @@ def main(argv):
         #Server socket & beerocks_cli updates
         if not g_ext_log_file: 
             #start server_socket
-            t = Thread(target=socket_server, args=(log_file,))
+            t = SocketServerThread(log_file)
+            t.daemon = True
             t.start()
             t_list.append(t)
             # beerocks_cli updates (either via ssh or locally)
             time.sleep(3)
             if not gw_ip:
                 # running locally
-                t = Thread(target=local_start_beerocks_cli, args=(bin_path, my_ip, docker_container))
+                t = BeerocksCliThread(bin_path, my_ip, docker_container)
             else:
-                t = Thread(target=ssh_start_beerocks_cli, args=(gw_ip, my_ip, ssh_port))
+                t = SSHThread(gw_ip, my_ip, ssh_port)
+            t.daemon = True
             t.start()
             t_list.append(t)
         
@@ -870,8 +898,7 @@ def main(argv):
         g_run_flag=False
 
         for t in t_list:
-            logger.debug("Joining thread {}" + str(t))
-            t.join()
+            t.terminate()
 
     except KeyboardInterrupt:
         logger.info("Keyboard interrupt, terminating...")
