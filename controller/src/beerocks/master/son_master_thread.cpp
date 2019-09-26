@@ -458,10 +458,12 @@ bool master_thread::autoconfig_wsc_add_m2_encrypted_settings(
     if (!mapf::encryption::create_iv(iv, WSC::WSC_ENCRYPTED_SETTINGS_IV_LENGTH))
         return false;
 
+    LOG(DEBUG) << "config_data before encryption, len=" << len << std::endl << utils::dump_buffer(buf, len);
     if (!mapf::encryption::aes_encrypt(keywrapkey, iv, buf, len)) {
         LOG(DEBUG) << "aes encrypt";
         return false;
     }
+    LOG(DEBUG) << "config_data after encryption, len=" << len << std::endl << utils::dump_buffer(buf, len);
 
     return true;
 }
@@ -619,7 +621,7 @@ bool master_thread::autoconfig_wsc_add_m2(std::shared_ptr<ieee1905_1::tlvWscM1> 
         config_data.set_ssid(bss_info_conf->ssid);
         config_data.authentication_type_attr().data = bss_info_conf->authentication_type;
         config_data.encryption_type_attr().data     = bss_info_conf->encryption_type;
-        config_data.set_network_key(bss_info_conf->network_key);
+        //config_data.set_network_key(bss_info_conf->network_key);
         config_data.multiap_attr().subelement_value = bss_info_conf->bss_type;
 
         LOG(DEBUG) << "WSC config_data:" << std::hex << std::endl
@@ -630,6 +632,7 @@ bool master_thread::autoconfig_wsc_add_m2(std::shared_ptr<ieee1905_1::tlvWscM1> 
                    << std::dec << std::endl;
     } else {
         // Tear down. No need to set any parameter except the teardown bit and the MAC address.
+        config_data.set_ssid("Openwrt");
         config_data.multiap_attr().subelement_value = WSC::eWscVendorExtSubelementBssType::TEARDOWN;
         LOG(DEBUG) << "WSC config_data: tear down";
     }

@@ -374,7 +374,7 @@ typedef struct sWscAttrVendorExtMultiAp {
     }
     void struct_init(){
         attribute_type = ATTR_VENDOR_EXTENSION;
-        data_length = WSC_VENDOR_EXTENSIONS_LENGTH;
+        data_length = 0x9;
         vendor_id_0 = WSC_VENDOR_ID_WFA_1;
         vendor_id_1 = WSC_VENDOR_ID_WFA_2;
         vendor_id_2 = WSC_VENDOR_ID_WFA_3;
@@ -413,7 +413,7 @@ typedef struct sWscAttrAuthenticationType {
     void struct_init(){
         attribute_type = ATTR_AUTH_TYPE;
         data_length = 0x2;
-        data = eWscAuth::WSC_AUTH_WPA2PSK;
+        data = eWscAuth::WSC_AUTH_OPEN;
     }
 } __attribute__((packed)) sWscAttrAuthenticationType;
 
@@ -429,7 +429,7 @@ typedef struct sWscAttrEncryptionType {
     void struct_init(){
         attribute_type = ATTR_ENCR_TYPE;
         data_length = 0x2;
-        data = eWscEncr::WSC_ENCR_AES;
+        data = eWscEncr::WSC_ENCR_NONE;
     }
 } __attribute__((packed)) sWscAttrEncryptionType;
 

@@ -272,7 +272,7 @@ sWscAttrVendorExtMultiAp:
     _value: ATTR_VENDOR_EXTENSION
   data_length:
     _type: uint16_t
-    _value: WSC_VENDOR_EXTENSIONS_LENGTH
+    _value: 9 #WSC_VENDOR_EXTENSIONS_LENGTH
   vendor_id_0:
     _type: uint8_t
     _value: WSC_VENDOR_ID_WFA_1
@@ -325,7 +325,7 @@ sWscAttrAuthenticationType:
     _value: 2
   data:
     _type: eWscAuth
-    _value: eWscAuth::WSC_AUTH_WPA2PSK
+    _value: eWscAuth::WSC_AUTH_OPEN
 
 sWscAttrEncryptionType:
   _type: struct
@@ -337,7 +337,7 @@ sWscAttrEncryptionType:
     _value: 2
   data:
     _type: eWscEncr
-    _value: eWscEncr::WSC_ENCR_AES
+    _value: eWscEncr::WSC_ENCR_NONE
 
 sWscAttrNetworkKey:
   _type: struct
