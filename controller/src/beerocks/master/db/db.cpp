@@ -230,6 +230,25 @@ int db::get_node_channel(std::string mac)
     return n->channel;
 }
 
+int db::get_node_operating_class(std::string mac)
+{
+    auto n = get_node(mac);
+    if (!n) {
+        return 0;
+    }
+    return n->operating_class;
+}
+
+bool db::set_node_operating_class(std::string mac, uint8_t operating_class)
+{
+    auto n = get_node(mac);
+    if (!n) {
+        return false;
+    }
+    n->operating_class = operating_class;
+    return true;
+}
+
 bool db::set_node_vap_id(std::string mac, int8_t vap_id)
 {
     auto n = get_node(mac);

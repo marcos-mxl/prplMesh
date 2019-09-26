@@ -51,7 +51,8 @@ public:
 
     std::string ipv4;
     std::string manufacturer;
-    int channel = 0;
+    int channel             = 0;
+    uint8_t operating_class = 0;
     std::string name;
     int hierarchy = -1; //redundant but more efficient
     beerocks::message::sRadioCapabilities &capabilities;

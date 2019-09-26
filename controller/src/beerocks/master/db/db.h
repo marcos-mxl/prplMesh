@@ -174,6 +174,9 @@ public:
 
     int get_node_channel(std::string mac);
 
+    bool set_node_operating_class(std::string mac, uint8_t operating_class);
+    int get_node_operating_class(std::string mac);
+
     bool set_node_vap_id(std::string mac, int8_t vap_id);
     int8_t get_node_vap_id(std::string mac);
 
