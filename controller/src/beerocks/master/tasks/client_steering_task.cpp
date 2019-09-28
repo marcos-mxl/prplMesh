@@ -109,14 +109,14 @@ void client_steering_task::steer_sta()
         return;
     }
 
+    association_control_request_tlv->bssid_to_block_client() =
+        network_utils::mac_from_string(current_ap_mac);
+    association_control_request_tlv->association_control() =
+        wfa_map::tlvClientAssociationControlRequest::UNBLOCK;
+    association_control_request_tlv->validity_period_sec() = disassoc_timer;
     association_control_request_tlv->alloc_sta_list();
     auto sta_list         = association_control_request_tlv->sta_list(0);
     std::get<1>(sta_list) = network_utils::mac_from_string(sta_mac);
-    association_control_request_tlv->bssid_to_block_client() =
-        network_utils::mac_from_string(current_ap_mac);
-    association_control_request_tlv->validity_period_sec() = disassoc_timer;
-    association_control_request_tlv->association_control() =
-        wfa_map::tlvClientAssociationControlRequest::BLOCK;
 
     //TODO: Add a new vendor-specific TLV to include ipv4 ?
     // request->ipv4() = network_utils::ipv4_from_string(database.get_node_ipv4(sta_mac));
@@ -164,24 +164,40 @@ void client_steering_task::steer_sta()
         /*
         * send disallow to all others
         */
-        Socket *sd   = database.get_node_socket(hostap);
-        auto request = message_com::create_vs_message<
-            beerocks_message::cACTION_CONTROL_CLIENT_DISALLOW_REQUEST>(cmdu_tx, id);
-
-        if (request == nullptr) {
-            LOG(ERROR) << "Failed building ACTION_CONTROL_CLIENT_DISALLOW_REQUEST message!";
+        Socket *sd = database.get_node_socket(hostap);
+        if (!cmdu_tx.create(0,
+                            ieee1905_1::eMessageType::CLIENT_ASSOCIATION_CONTROL_REQUEST_MESSAGE)) {
+            LOG(ERROR)
+                << "cmdu creation of type CLIENT_ASSOCIATION_CONTROL_REQUEST_MESSAGE, has failed";
             return;
         }
-        request->mac() = network_utils::mac_from_string(sta_mac);
+
+        auto association_control_block_request_tlv =
+            cmdu_tx.addClass<wfa_map::tlvClientAssociationControlRequest>();
+        if (!association_control_block_request_tlv) {
+            LOG(ERROR) << "addClass wfa_map::tlvClientAssociationControlRequest failed";
+            return;
+        }
+
+        association_control_block_request_tlv->bssid_to_block_client() =
+            network_utils::mac_from_string(current_ap_mac);
+        association_control_block_request_tlv->association_control() =
+            wfa_map::tlvClientAssociationControlRequest::BLOCK;
+        association_control_block_request_tlv->validity_period_sec() = disassoc_timer;
+        association_control_block_request_tlv->alloc_sta_list();
+        auto sta_list         = association_control_block_request_tlv->sta_list(0);
+        std::get<1>(sta_list) = network_utils::mac_from_string(sta_mac);
+
         /*
         * Only for the original hostap, add error code "33" to signal hostap that we want to continue 
         * to hear BTM response from client.
         */
-        request->reject_sta() = (hostap == original_radio_mac) ? 33 : 0;
+        //TODO: Add reject_sta to new VS
+        // request->reject_sta() = (hostap == original_radio_mac) ? 33 : 0;
 
         son_actions::send_cmdu_to_agent(sd, cmdu_tx, hostap);
         TASK_LOG(DEBUG) << "sending disallow request for " << sta_mac << " to " << hostap
-                        << " id=" << int(id) << " reject_sta=" << int(request->reject_sta());
+                        << " id=" << int(id) << " reject_sta=";
 
         // update bml listeners
         bml_task::client_disallow_req_available_event client_disallow_event;
