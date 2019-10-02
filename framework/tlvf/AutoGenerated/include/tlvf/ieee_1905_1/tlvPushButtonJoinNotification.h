@@ -33,7 +33,7 @@ class tlvPushButtonJoinNotification : public BaseClass
         ~tlvPushButtonJoinNotification();
 
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& al_mac_notification_src();
         uint16_t& mid_of_the_notification();
         //Interface-specific MAC address of the interface of the transmitting device

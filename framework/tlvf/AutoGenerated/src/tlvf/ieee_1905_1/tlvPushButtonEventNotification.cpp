@@ -29,8 +29,8 @@ const eTlvType& tlvPushButtonEventNotification::type() {
     return (const eTlvType&)(*m_type);
 }
 
-const uint16_t& tlvPushButtonEventNotification::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvPushButtonEventNotification::length() {
+    return (uint16_t&)(*m_length);
 }
 
 uint8_t& tlvPushButtonEventNotification::media_type_list_length() {
@@ -70,7 +70,6 @@ bool tlvPushButtonEventNotification::alloc_media_type_list(size_t count) {
     m_media_type_list_idx__ += count;
     *m_media_type_list_length += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     if (!m_parse__) { 
         for (size_t i = m_media_type_list_idx__ - count; i < m_media_type_list_idx__; i++) { m_media_type_list[i].struct_init(); }
     }
@@ -79,6 +78,7 @@ bool tlvPushButtonEventNotification::alloc_media_type_list(size_t count) {
 
 void tlvPushButtonEventNotification::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     for (size_t i = 0; i < (size_t)*m_media_type_list_length; i++){
         m_media_type_list[i].struct_swap();
@@ -104,12 +104,10 @@ bool tlvPushButtonEventNotification::init()
     if (!m_parse__) *m_type = eTlvType::TLV_PUSH_BUTTON_EVENT_NOTIFICATION;
     m_buff_ptr__ += sizeof(eTlvType) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_media_type_list_length = (uint8_t*)m_buff_ptr__;
     if (!m_parse__) *m_media_type_list_length = 0;
     m_buff_ptr__ += sizeof(uint8_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint8_t); }
     m_media_type_list = (sMediaType*)m_buff_ptr__;
     uint8_t media_type_list_length = *m_media_type_list_length;
     m_media_type_list_idx__ = media_type_list_length;
@@ -119,12 +117,6 @@ bool tlvPushButtonEventNotification::init()
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvType::TLV_PUSH_BUTTON_EVENT_NOTIFICATION) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvType::TLV_PUSH_BUTTON_EVENT_NOTIFICATION) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

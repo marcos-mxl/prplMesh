@@ -3,8 +3,8 @@
 _namespace: wfa_map
 
 eTlvTypeMap:
-  _type: enum_class
-  _enum_storage: uint8_t
+  _type: enum
+  _enum_storage: uint16_t
   TLV_SUPPORTED_SERVICE: 0x80
   TLV_SEARCHED_SERVICE: 0x81
   TLV_AP_RADIO_IDENTIFIER: 0x82

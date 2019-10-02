@@ -35,7 +35,7 @@ class tlvWscM1 : public BaseClass
         ~tlvWscM1();
 
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         WSC::sWscAttrVersion& version_attr();
         WSC::sWscAttrMessageType& message_type_attr();
         WSC::sWscAttrUuidE& uuid_e_attr();

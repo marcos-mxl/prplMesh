@@ -36,7 +36,7 @@ class tlvApRadioBasicCapabilities : public BaseClass
         ~tlvApRadioBasicCapabilities();
 
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& radio_uid();
         uint8_t& maximum_number_of_bsss_supported();
         uint8_t& operating_classes_info_list_length();

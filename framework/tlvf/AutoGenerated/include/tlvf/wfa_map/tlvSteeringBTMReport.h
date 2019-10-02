@@ -33,7 +33,7 @@ class tlvSteeringBTMReport : public BaseClass
         ~tlvSteeringBTMReport();
 
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& bssid();
         sMacAddr& sta_mac();
         uint8_t& btm_status_code();

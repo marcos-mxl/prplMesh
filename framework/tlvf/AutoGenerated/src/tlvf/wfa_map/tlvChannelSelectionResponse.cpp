@@ -29,8 +29,8 @@ const eTlvTypeMap& tlvChannelSelectionResponse::type() {
     return (const eTlvTypeMap&)(*m_type);
 }
 
-const uint16_t& tlvChannelSelectionResponse::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvChannelSelectionResponse::length() {
+    return (uint16_t&)(*m_length);
 }
 
 sMacAddr& tlvChannelSelectionResponse::radio_uid() {
@@ -43,6 +43,7 @@ tlvChannelSelectionResponse::eResponseCode& tlvChannelSelectionResponse::respons
 
 void tlvChannelSelectionResponse::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_radio_uid->struct_swap();
 }
@@ -67,26 +68,17 @@ bool tlvChannelSelectionResponse::init()
     if (!m_parse__) *m_type = eTlvTypeMap::TLV_CHANNEL_SELECTION_RESPONSE;
     m_buff_ptr__ += sizeof(eTlvTypeMap) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_radio_uid = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_radio_uid->struct_init(); }
     m_response_code = (eResponseCode*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(eResponseCode) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(eResponseCode); }
     if (m_buff_ptr__ - m_buff__ > ssize_t(m_buff_len__)) {
         TLVF_LOG(ERROR) << "Not enough available space on buffer. Class init failed";
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvTypeMap::TLV_CHANNEL_SELECTION_RESPONSE) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvTypeMap::TLV_CHANNEL_SELECTION_RESPONSE) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

@@ -29,8 +29,8 @@ const eTlvType& tlvPushButtonJoinNotification::type() {
     return (const eTlvType&)(*m_type);
 }
 
-const uint16_t& tlvPushButtonJoinNotification::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvPushButtonJoinNotification::length() {
+    return (uint16_t&)(*m_length);
 }
 
 sMacAddr& tlvPushButtonJoinNotification::al_mac_notification_src() {
@@ -51,6 +51,7 @@ sMacAddr& tlvPushButtonJoinNotification::iface_mac_of_new_device_joined() {
 
 void tlvPushButtonJoinNotification::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_al_mac_notification_src->struct_swap();
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_mid_of_the_notification));
@@ -80,34 +81,23 @@ bool tlvPushButtonJoinNotification::init()
     if (!m_parse__) *m_type = eTlvType::TLV_PUSH_BUTTON_JOIN_NOTIFICATION;
     m_buff_ptr__ += sizeof(eTlvType) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_al_mac_notification_src = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_al_mac_notification_src->struct_init(); }
     m_mid_of_the_notification = (uint16_t*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint16_t); }
     m_transmitter_iface_mac_of_new_device_joined = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_transmitter_iface_mac_of_new_device_joined->struct_init(); }
     m_iface_mac_of_new_device_joined = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_iface_mac_of_new_device_joined->struct_init(); }
     if (m_buff_ptr__ - m_buff__ > ssize_t(m_buff_len__)) {
         TLVF_LOG(ERROR) << "Not enough available space on buffer. Class init failed";
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvType::TLV_PUSH_BUTTON_JOIN_NOTIFICATION) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvType::TLV_PUSH_BUTTON_JOIN_NOTIFICATION) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

@@ -34,7 +34,7 @@ class tlvNon1905neighborDeviceList : public BaseClass
         ~tlvNon1905neighborDeviceList();
 
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& mac_local_iface();
         size_t mac_non_1905_device_length() { return m_mac_non_1905_device_idx__ * sizeof(sMacAddr); }
         std::tuple<bool, sMacAddr&> mac_non_1905_device(size_t idx);

@@ -54,7 +54,7 @@ class tlvApCapability : public BaseClass
         } __attribute__((packed)) sValue;
         
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sValue& value();
         void class_swap();
         static size_t get_initial_size();

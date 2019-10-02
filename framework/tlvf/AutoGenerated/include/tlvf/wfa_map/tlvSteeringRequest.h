@@ -73,7 +73,7 @@ class tlvSteeringRequest : public BaseClass
         } __attribute__((packed)) sTargetBssidInfo;
         
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& bssid();
         sRequestFlags& request_flags();
         //Time period in seconds (from reception of the Steering Request message) for which the request is valid.

@@ -40,7 +40,7 @@ class tlvChannelSelectionResponse : public BaseClass
         };
         
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& radio_uid();
         eResponseCode& response_code();
         void class_swap();

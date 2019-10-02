@@ -37,7 +37,7 @@ class tlvHigherLayerData : public BaseClass
         };
         
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         eProtocol& protocol();
         size_t payload_length() { return m_payload_idx__ * sizeof(uint8_t); }
         uint8_t* payload(size_t idx = 0);

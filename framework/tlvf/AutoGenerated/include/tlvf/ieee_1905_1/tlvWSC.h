@@ -10,8 +10,8 @@
  * See LICENSE file for more details.
  */
 
-#ifndef _TLVF_IEEE_1905_1_TLVSUPPORTEDFREQBAND_H_
-#define _TLVF_IEEE_1905_1_TLVSUPPORTEDFREQBAND_H_
+#ifndef _TLVF_IEEE_1905_1_TLVWSC_H_
+#define _TLVF_IEEE_1905_1_TLVWSC_H_
 
 #include <cstddef>
 #include <stdint.h>
@@ -20,26 +20,23 @@
 #include <memory>
 #include <tlvf/BaseClass.h>
 #include "tlvf/ieee_1905_1/eTlvType.h"
+#include <tuple>
 
 namespace ieee1905_1 {
 
 
-class tlvSupportedFreqBand : public BaseClass
+class tlvWSC : public BaseClass
 {
     public:
-        tlvSupportedFreqBand(uint8_t* buff, size_t buff_len, bool parse = false, bool swap_needed = false);
-        tlvSupportedFreqBand(std::shared_ptr<BaseClass> base, bool parse = false, bool swap_needed = false);
-        ~tlvSupportedFreqBand();
+        tlvWSC(uint8_t* buff, size_t buff_len, bool parse = false, bool swap_needed = false);
+        tlvWSC(std::shared_ptr<BaseClass> base, bool parse = false, bool swap_needed = false);
+        ~tlvWSC();
 
-        enum eValue: uint8_t {
-            BAND_2_4G = 0x0,
-            BAND_5G = 0x1,
-            BAND_60G = 0x2,
-        };
-        
         const eTlvType& type();
         uint16_t& length();
-        eValue& value();
+        size_t wsc_frame_length() { return m_wsc_frame_idx__ * sizeof(uint8_t); }
+        uint8_t* wsc_frame(size_t idx = 0);
+        bool alloc_wsc_frame(size_t count = 1);
         void class_swap();
         static size_t get_initial_size();
 
@@ -47,9 +44,11 @@ class tlvSupportedFreqBand : public BaseClass
         bool init();
         eTlvType* m_type = nullptr;
         uint16_t* m_length = nullptr;
-        eValue* m_value = nullptr;
+        uint8_t* m_wsc_frame = nullptr;
+        size_t m_wsc_frame_idx__ = 0;
+        int m_lock_order_counter__ = 0;
 };
 
 }; // close namespace: ieee1905_1
 
-#endif //_TLVF/IEEE_1905_1_TLVSUPPORTEDFREQBAND_H_
+#endif //_TLVF/IEEE_1905_1_TLVWSC_H_

@@ -29,8 +29,8 @@ const eTlvType& tlv1905NeighborDevice::type() {
     return (const eTlvType&)(*m_type);
 }
 
-const uint16_t& tlv1905NeighborDevice::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlv1905NeighborDevice::length() {
+    return (uint16_t&)(*m_length);
 }
 
 sMacAddr& tlv1905NeighborDevice::mac_local_iface() {
@@ -69,7 +69,6 @@ bool tlv1905NeighborDevice::alloc_mac_al_1905_device(size_t count) {
     }
     m_mac_al_1905_device_idx__ += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     if (!m_parse__) { 
         for (size_t i = m_mac_al_1905_device_idx__ - count; i < m_mac_al_1905_device_idx__; i++) { m_mac_al_1905_device[i].struct_init(); }
     }
@@ -78,6 +77,7 @@ bool tlv1905NeighborDevice::alloc_mac_al_1905_device(size_t count) {
 
 void tlv1905NeighborDevice::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_mac_local_iface->struct_swap();
     for (size_t i = 0; i < m_mac_al_1905_device_idx__; i++){
@@ -104,31 +104,16 @@ bool tlv1905NeighborDevice::init()
     if (!m_parse__) *m_type = eTlvType::TLV_1905_NEIGHBOR_DEVICE;
     m_buff_ptr__ += sizeof(eTlvType) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_mac_local_iface = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_mac_local_iface->struct_init(); }
     m_mac_al_1905_device = (sMacAl1905Device*)m_buff_ptr__;
-    if (m_length && m_parse__) {
-        size_t len = *m_length;
-        if (m_swap__) { tlvf_swap(16, reinterpret_cast<uint8_t*>(&len)); }
-        len -= (m_buff_ptr__ - sizeof(*m_type) - sizeof(*m_length) - m_buff__);
-        m_mac_al_1905_device_idx__ = len/sizeof(sMacAl1905Device);
-        m_buff_ptr__ += len;
-    }
     if (m_buff_ptr__ - m_buff__ > ssize_t(m_buff_len__)) {
         TLVF_LOG(ERROR) << "Not enough available space on buffer. Class init failed";
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvType::TLV_1905_NEIGHBOR_DEVICE) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvType::TLV_1905_NEIGHBOR_DEVICE) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

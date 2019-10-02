@@ -47,7 +47,7 @@ class tlvPushButtonEventNotification : public BaseClass
         } __attribute__((packed)) sMediaType;
         
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         uint8_t& media_type_list_length();
         std::tuple<bool, sMediaType&> media_type_list(size_t idx);
         bool alloc_media_type_list(size_t count = 1);

@@ -29,8 +29,8 @@ const eTlvTypeMap& tlvChannelPreference::type() {
     return (const eTlvTypeMap&)(*m_type);
 }
 
-const uint16_t& tlvChannelPreference::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvChannelPreference::length() {
+    return (uint16_t&)(*m_length);
 }
 
 sMacAddr& tlvChannelPreference::radio_uid() {
@@ -100,13 +100,13 @@ bool tlvChannelPreference::add_operating_classes_list(std::shared_ptr<cPreferenc
     size_t len = ptr->getLen();
     m_operating_classes_list_vector.push_back(ptr);
     m_buff_ptr__ += len;
-    if(!m_parse__ && m_length){ (*m_length) += len; }
     m_lock_allocation__ = false;
     return true;
 }
 
 void tlvChannelPreference::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_radio_uid->struct_swap();
     for (size_t i = 0; i < (size_t)*m_operating_classes_list_length; i++){
@@ -134,16 +134,13 @@ bool tlvChannelPreference::init()
     if (!m_parse__) *m_type = eTlvTypeMap::TLV_CHANNEL_PREFERENCE;
     m_buff_ptr__ += sizeof(eTlvTypeMap) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_radio_uid = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_radio_uid->struct_init(); }
     m_operating_classes_list_length = (uint8_t*)m_buff_ptr__;
     if (!m_parse__) *m_operating_classes_list_length = 0;
     m_buff_ptr__ += sizeof(uint8_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint8_t); }
     m_operating_classes_list = (cPreferenceOperatingClasses*)m_buff_ptr__;
     uint8_t operating_classes_list_length = *m_operating_classes_list_length;
     m_operating_classes_list_idx__ = 0;
@@ -165,12 +162,6 @@ bool tlvChannelPreference::init()
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvTypeMap::TLV_CHANNEL_PREFERENCE) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvTypeMap::TLV_CHANNEL_PREFERENCE) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

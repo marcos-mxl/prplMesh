@@ -48,7 +48,7 @@ class tlvDeviceInformation : public BaseClass
         } __attribute__((packed)) sInfo;
         
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& mac();
         uint8_t& info_length();
         std::tuple<bool, sInfo&> info(size_t idx);

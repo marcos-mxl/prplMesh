@@ -29,8 +29,8 @@ const eTlvType& tlvWscM2::type() {
     return (const eTlvType&)(*m_type);
 }
 
-const uint16_t& tlvWscM2::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvWscM2::length() {
+    return (uint16_t&)(*m_length);
 }
 
 WSC::sWscAttrVersion& tlvWscM2::version_attr() {
@@ -157,7 +157,6 @@ bool tlvWscM2::alloc_manufacturer(size_t count) {
     m_manufacturer_idx__ += count;
     *m_manufacturer_length += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     return true;
 }
 
@@ -242,7 +241,6 @@ bool tlvWscM2::alloc_model_name(size_t count) {
     m_model_name_idx__ += count;
     *m_model_name_length += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     return true;
 }
 
@@ -324,7 +322,6 @@ bool tlvWscM2::alloc_model_number(size_t count) {
     m_model_number_idx__ += count;
     *m_model_number_length += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     return true;
 }
 
@@ -403,7 +400,6 @@ bool tlvWscM2::alloc_serial_number(size_t count) {
     m_serial_number_idx__ += count;
     *m_serial_number_length += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     return true;
 }
 
@@ -479,7 +475,6 @@ bool tlvWscM2::add_encrypted_settings(std::shared_ptr<WSC::cWscAttrEncryptedSett
     m_authenticator = (WSC::sWscAttrAuthenticator *)((uint8_t *)(m_authenticator) + len - ptr->get_initial_size());
     m_encrypted_settings_ptr = ptr;
     m_buff_ptr__ += len;
-    if(!m_parse__ && m_length){ (*m_length) += len; }
     m_lock_allocation__ = false;
     return true;
 }
@@ -490,6 +485,7 @@ WSC::sWscAttrAuthenticator& tlvWscM2::authenticator() {
 
 void tlvWscM2::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_version_attr->struct_swap();
     m_message_type_attr->struct_swap();
@@ -564,56 +560,43 @@ bool tlvWscM2::init()
     if (!m_parse__) *m_type = eTlvType::TLV_WSC;
     m_buff_ptr__ += sizeof(eTlvType) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_version_attr = (WSC::sWscAttrVersion*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrVersion) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrVersion); }
     if (!m_parse__) { m_version_attr->struct_init(); }
     m_message_type_attr = (WSC::sWscAttrMessageType*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrMessageType) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrMessageType); }
     if (!m_parse__) { m_message_type_attr->struct_init(); }
     m_enrolee_nonce_attr = (WSC::sWscAttrEnroleeNonce*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrEnroleeNonce) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrEnroleeNonce); }
     if (!m_parse__) { m_enrolee_nonce_attr->struct_init(); }
     m_registrar_nonce_attr = (WSC::sWscAttrRegistrarNonce*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrRegistrarNonce) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrRegistrarNonce); }
     if (!m_parse__) { m_registrar_nonce_attr->struct_init(); }
     m_uuid_r_attr = (WSC::sWscAttrUuidR*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrUuidR) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrUuidR); }
     if (!m_parse__) { m_uuid_r_attr->struct_init(); }
     m_public_key_attr = (WSC::sWscAttrPublicKey*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrPublicKey) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrPublicKey); }
     if (!m_parse__) { m_public_key_attr->struct_init(); }
     m_authentication_type_flags_attr = (WSC::sWscAttrAuthenticationTypeFlags*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrAuthenticationTypeFlags) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrAuthenticationTypeFlags); }
     if (!m_parse__) { m_authentication_type_flags_attr->struct_init(); }
     m_encryption_type_flags_attr = (WSC::sWscAttrEncryptionTypeFlags*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrEncryptionTypeFlags) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrEncryptionTypeFlags); }
     if (!m_parse__) { m_encryption_type_flags_attr->struct_init(); }
     m_connection_type_flags_attr = (WSC::sWscAttrConnectionTypeFlags*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrConnectionTypeFlags) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrConnectionTypeFlags); }
     if (!m_parse__) { m_connection_type_flags_attr->struct_init(); }
     m_configuration_methods_attr = (WSC::sWscAttrConfigurationMethods*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrConfigurationMethods) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrConfigurationMethods); }
     if (!m_parse__) { m_configuration_methods_attr->struct_init(); }
     m_manufacturer_type = (WSC::eWscAttributes*)m_buff_ptr__;
     if (!m_parse__) *m_manufacturer_type = WSC::ATTR_MANUFACTURER;
     m_buff_ptr__ += sizeof(WSC::eWscAttributes) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::eWscAttributes); }
     m_manufacturer_length = (uint16_t*)m_buff_ptr__;
     if (!m_parse__) *m_manufacturer_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint16_t); }
     m_manufacturer = (char*)m_buff_ptr__;
     uint16_t manufacturer_length = *m_manufacturer_length;
     if (m_parse__ && m_swap__) {  tlvf_swap(16, reinterpret_cast<uint8_t*>(&manufacturer_length)); }
@@ -622,11 +605,9 @@ bool tlvWscM2::init()
     m_model_name_type = (WSC::eWscAttributes*)m_buff_ptr__;
     if (!m_parse__) *m_model_name_type = WSC::ATTR_MODEL_NAME;
     m_buff_ptr__ += sizeof(WSC::eWscAttributes) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::eWscAttributes); }
     m_model_name_length = (uint16_t*)m_buff_ptr__;
     if (!m_parse__) *m_model_name_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint16_t); }
     m_model_name = (char*)m_buff_ptr__;
     uint16_t model_name_length = *m_model_name_length;
     if (m_parse__ && m_swap__) {  tlvf_swap(16, reinterpret_cast<uint8_t*>(&model_name_length)); }
@@ -635,11 +616,9 @@ bool tlvWscM2::init()
     m_model_number_type = (WSC::eWscAttributes*)m_buff_ptr__;
     if (!m_parse__) *m_model_number_type = WSC::ATTR_MODEL_NUMBER;
     m_buff_ptr__ += sizeof(WSC::eWscAttributes) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::eWscAttributes); }
     m_model_number_length = (uint16_t*)m_buff_ptr__;
     if (!m_parse__) *m_model_number_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint16_t); }
     m_model_number = (char*)m_buff_ptr__;
     uint16_t model_number_length = *m_model_number_length;
     if (m_parse__ && m_swap__) {  tlvf_swap(16, reinterpret_cast<uint8_t*>(&model_number_length)); }
@@ -648,11 +627,9 @@ bool tlvWscM2::init()
     m_serial_number_type = (WSC::eWscAttributes*)m_buff_ptr__;
     if (!m_parse__) *m_serial_number_type = WSC::ATTR_SERIAL_NUMBER;
     m_buff_ptr__ += sizeof(WSC::eWscAttributes) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::eWscAttributes); }
     m_serial_number_length = (uint16_t*)m_buff_ptr__;
     if (!m_parse__) *m_serial_number_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint16_t); }
     m_serial_number = (char*)m_buff_ptr__;
     uint16_t serial_number_length = *m_serial_number_length;
     if (m_parse__ && m_swap__) {  tlvf_swap(16, reinterpret_cast<uint8_t*>(&serial_number_length)); }
@@ -660,31 +637,24 @@ bool tlvWscM2::init()
     m_buff_ptr__ += sizeof(char)*(serial_number_length);
     m_primary_device_type_attr = (WSC::sWscAttrPrimaryDeviceType*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrPrimaryDeviceType) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrPrimaryDeviceType); }
     if (!m_parse__) { m_primary_device_type_attr->struct_init(); }
     m_rf_bands_attr = (WSC::sWscAttrRfBands*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrRfBands) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrRfBands); }
     if (!m_parse__) { m_rf_bands_attr->struct_init(); }
     m_association_state_attr = (WSC::sWscAttrAssociationState*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrAssociationState) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrAssociationState); }
     if (!m_parse__) { m_association_state_attr->struct_init(); }
     m_configuration_error_attr = (WSC::sWscAttrConfigurationError*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrConfigurationError) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrConfigurationError); }
     if (!m_parse__) { m_configuration_error_attr->struct_init(); }
     m_device_password_id_attr = (WSC::sWscAttrDevicePasswordID*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrDevicePasswordID) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrDevicePasswordID); }
     if (!m_parse__) { m_device_password_id_attr->struct_init(); }
     m_os_version_attr = (WSC::sWscAttrOsVersion*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrOsVersion) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrOsVersion); }
     if (!m_parse__) { m_os_version_attr->struct_init(); }
     m_version2_attr = (WSC::sWscAttrVersion2*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrVersion2) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrVersion2); }
     if (!m_parse__) { m_version2_attr->struct_init(); }
     m_encrypted_settings = (WSC::cWscAttrEncryptedSettings*)m_buff_ptr__;
     if (m_parse__) {
@@ -702,19 +672,12 @@ bool tlvWscM2::init()
     }
     m_authenticator = (WSC::sWscAttrAuthenticator*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(WSC::sWscAttrAuthenticator) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(WSC::sWscAttrAuthenticator); }
     if (!m_parse__) { m_authenticator->struct_init(); }
     if (m_buff_ptr__ - m_buff__ > ssize_t(m_buff_len__)) {
         TLVF_LOG(ERROR) << "Not enough available space on buffer. Class init failed";
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvType::TLV_WSC) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvType::TLV_WSC) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

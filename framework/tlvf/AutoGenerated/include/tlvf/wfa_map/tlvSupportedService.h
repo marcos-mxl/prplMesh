@@ -38,7 +38,7 @@ class tlvSupportedService : public BaseClass
         };
         
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         uint8_t& supported_service_list_length();
         std::tuple<bool, eSupportedService&> supported_service_list(size_t idx);
         bool alloc_supported_service_list(size_t count = 1);

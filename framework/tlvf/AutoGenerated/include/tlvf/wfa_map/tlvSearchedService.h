@@ -37,7 +37,7 @@ class tlvSearchedService : public BaseClass
         };
         
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         uint8_t& searched_service_list_length();
         std::tuple<bool, eSearchedService&> searched_service_list(size_t idx);
         bool alloc_searched_service_list(size_t count = 1);

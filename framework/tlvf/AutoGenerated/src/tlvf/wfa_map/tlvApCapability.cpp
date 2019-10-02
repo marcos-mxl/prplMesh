@@ -29,8 +29,8 @@ const eTlvTypeMap& tlvApCapability::type() {
     return (const eTlvTypeMap&)(*m_type);
 }
 
-const uint16_t& tlvApCapability::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvApCapability::length() {
+    return (uint16_t&)(*m_length);
 }
 
 tlvApCapability::sValue& tlvApCapability::value() {
@@ -39,6 +39,7 @@ tlvApCapability::sValue& tlvApCapability::value() {
 
 void tlvApCapability::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_value->struct_swap();
 }
@@ -62,23 +63,15 @@ bool tlvApCapability::init()
     if (!m_parse__) *m_type = eTlvTypeMap::TLV_AP_CAPABILITY;
     m_buff_ptr__ += sizeof(eTlvTypeMap) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_value = (sValue*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sValue) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sValue); }
     if (!m_parse__) { m_value->struct_init(); }
     if (m_buff_ptr__ - m_buff__ > ssize_t(m_buff_len__)) {
         TLVF_LOG(ERROR) << "Not enough available space on buffer. Class init failed";
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvTypeMap::TLV_AP_CAPABILITY) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvTypeMap::TLV_AP_CAPABILITY) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

@@ -44,7 +44,7 @@ class tlvLinkMetricQuery : public BaseClass
         };
         
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         eNeighborType& neighbor_type();
         sMacAddr& mac_al_1905_device();
         eLinkMetricsType& link_metrics();

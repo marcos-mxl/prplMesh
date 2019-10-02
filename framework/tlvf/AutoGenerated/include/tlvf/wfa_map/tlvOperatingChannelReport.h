@@ -43,7 +43,7 @@ class tlvOperatingChannelReport : public BaseClass
         } __attribute__((packed)) sOperatingClasses;
         
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& radio_uid();
         uint8_t& operating_classes_list_length();
         std::tuple<bool, sOperatingClasses&> operating_classes_list(size_t idx);
@@ -51,7 +51,7 @@ class tlvOperatingChannelReport : public BaseClass
         //Current Transmit Power EIRP representing the current nominal transmit power.
         //The field is coded as a 2's complement signed integer in units of decibels relative to 1 mW (dBm).
         //This value is less than or equal to the Maximum Transmit Power specified in the AP Radio Basic Capabilities TLV for the current operating class.    
-        int8_t& current_transmit_power();
+        uint8_t& current_transmit_power();
         void class_swap();
         static size_t get_initial_size();
 
@@ -64,7 +64,7 @@ class tlvOperatingChannelReport : public BaseClass
         sOperatingClasses* m_operating_classes_list = nullptr;
         size_t m_operating_classes_list_idx__ = 0;
         int m_lock_order_counter__ = 0;
-        int8_t* m_current_transmit_power = nullptr;
+        uint8_t* m_current_transmit_power = nullptr;
 };
 
 }; // close namespace: wfa_map

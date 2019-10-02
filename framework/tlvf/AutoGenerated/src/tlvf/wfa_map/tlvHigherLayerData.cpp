@@ -29,8 +29,8 @@ const eTlvTypeMap& tlvHigherLayerData::type() {
     return (const eTlvTypeMap&)(*m_type);
 }
 
-const uint16_t& tlvHigherLayerData::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvHigherLayerData::length() {
+    return (uint16_t&)(*m_length);
 }
 
 tlvHigherLayerData::eProtocol& tlvHigherLayerData::protocol() {
@@ -68,12 +68,12 @@ bool tlvHigherLayerData::alloc_payload(size_t count) {
     }
     m_payload_idx__ += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     return true;
 }
 
 void tlvHigherLayerData::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
 }
 
@@ -96,30 +96,15 @@ bool tlvHigherLayerData::init()
     if (!m_parse__) *m_type = eTlvTypeMap::TLV_HIGHER_LAYER_DATA;
     m_buff_ptr__ += sizeof(eTlvTypeMap) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_protocol = (eProtocol*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(eProtocol) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(eProtocol); }
     m_payload = (uint8_t*)m_buff_ptr__;
-    if (m_length && m_parse__) {
-        size_t len = *m_length;
-        if (m_swap__) { tlvf_swap(16, reinterpret_cast<uint8_t*>(&len)); }
-        len -= (m_buff_ptr__ - sizeof(*m_type) - sizeof(*m_length) - m_buff__);
-        m_payload_idx__ = len/sizeof(uint8_t);
-        m_buff_ptr__ += len;
-    }
     if (m_buff_ptr__ - m_buff__ > ssize_t(m_buff_len__)) {
         TLVF_LOG(ERROR) << "Not enough available space on buffer. Class init failed";
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvTypeMap::TLV_HIGHER_LAYER_DATA) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvTypeMap::TLV_HIGHER_LAYER_DATA) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

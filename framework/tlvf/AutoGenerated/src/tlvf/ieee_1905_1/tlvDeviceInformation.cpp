@@ -29,8 +29,8 @@ const eTlvType& tlvDeviceInformation::type() {
     return (const eTlvType&)(*m_type);
 }
 
-const uint16_t& tlvDeviceInformation::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvDeviceInformation::length() {
+    return (uint16_t&)(*m_length);
 }
 
 sMacAddr& tlvDeviceInformation::mac() {
@@ -74,7 +74,6 @@ bool tlvDeviceInformation::alloc_info(size_t count) {
     m_info_idx__ += count;
     *m_info_length += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     if (!m_parse__) { 
         for (size_t i = m_info_idx__ - count; i < m_info_idx__; i++) { m_info[i].struct_init(); }
     }
@@ -83,6 +82,7 @@ bool tlvDeviceInformation::alloc_info(size_t count) {
 
 void tlvDeviceInformation::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_mac->struct_swap();
     for (size_t i = 0; i < (size_t)*m_info_length; i++){
@@ -110,16 +110,13 @@ bool tlvDeviceInformation::init()
     if (!m_parse__) *m_type = eTlvType::TLV_DEVICE_INFORMATION;
     m_buff_ptr__ += sizeof(eTlvType) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_mac = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_mac->struct_init(); }
     m_info_length = (uint8_t*)m_buff_ptr__;
     if (!m_parse__) *m_info_length = 0;
     m_buff_ptr__ += sizeof(uint8_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint8_t); }
     m_info = (sInfo*)m_buff_ptr__;
     uint8_t info_length = *m_info_length;
     m_info_idx__ = info_length;
@@ -129,12 +126,6 @@ bool tlvDeviceInformation::init()
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvType::TLV_DEVICE_INFORMATION) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvType::TLV_DEVICE_INFORMATION) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

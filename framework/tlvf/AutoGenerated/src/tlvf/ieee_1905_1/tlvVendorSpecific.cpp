@@ -39,6 +39,7 @@ sVendorOUI& tlvVendorSpecific::vendor_oui() {
 
 void tlvVendorSpecific::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_vendor_oui->struct_swap();
 }

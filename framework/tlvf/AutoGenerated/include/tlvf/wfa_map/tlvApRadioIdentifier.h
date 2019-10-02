@@ -33,7 +33,7 @@ class tlvApRadioIdentifier : public BaseClass
         ~tlvApRadioIdentifier();
 
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& radio_uid();
         void class_swap();
         static size_t get_initial_size();

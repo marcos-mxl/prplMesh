@@ -29,8 +29,8 @@ const eTlvType& tlvDeviceBridgingCapability::type() {
     return (const eTlvType&)(*m_type);
 }
 
-const uint16_t& tlvDeviceBridgingCapability::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvDeviceBridgingCapability::length() {
+    return (uint16_t&)(*m_length);
 }
 
 uint8_t& tlvDeviceBridgingCapability::bridging_tuples_list_length() {
@@ -96,13 +96,13 @@ bool tlvDeviceBridgingCapability::add_bridging_tuples_list(std::shared_ptr<cMacL
     size_t len = ptr->getLen();
     m_bridging_tuples_list_vector.push_back(ptr);
     m_buff_ptr__ += len;
-    if(!m_parse__ && m_length){ (*m_length) += len; }
     m_lock_allocation__ = false;
     return true;
 }
 
 void tlvDeviceBridgingCapability::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     for (size_t i = 0; i < (size_t)*m_bridging_tuples_list_length; i++){
         std::get<1>(bridging_tuples_list(i)).class_swap();
@@ -128,12 +128,10 @@ bool tlvDeviceBridgingCapability::init()
     if (!m_parse__) *m_type = eTlvType::TLV_DEVICE_BRIDGING_CAPABILITY;
     m_buff_ptr__ += sizeof(eTlvType) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_bridging_tuples_list_length = (uint8_t*)m_buff_ptr__;
     if (!m_parse__) *m_bridging_tuples_list_length = 0;
     m_buff_ptr__ += sizeof(uint8_t) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(uint8_t); }
     m_bridging_tuples_list = (cMacList*)m_buff_ptr__;
     uint8_t bridging_tuples_list_length = *m_bridging_tuples_list_length;
     m_bridging_tuples_list_idx__ = 0;
@@ -155,12 +153,6 @@ bool tlvDeviceBridgingCapability::init()
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvType::TLV_DEVICE_BRIDGING_CAPABILITY) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvType::TLV_DEVICE_BRIDGING_CAPABILITY) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

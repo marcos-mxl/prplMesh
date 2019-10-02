@@ -33,7 +33,7 @@ class tlvAlMacAddressType : public BaseClass
         ~tlvAlMacAddressType();
 
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& mac();
         void class_swap();
         static size_t get_initial_size();

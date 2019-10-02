@@ -84,7 +84,7 @@ class tlvTransmitterLinkMetric : public BaseClass
         } __attribute__((packed)) sInterfacePairInfo;
         
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& al_mac_of_the_device_that_transmits();
         sMacAddr& al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv();
         //The fields shall be repeated for each connected interface pair between the receiving

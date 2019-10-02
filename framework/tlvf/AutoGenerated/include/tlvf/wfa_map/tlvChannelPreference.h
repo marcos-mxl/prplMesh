@@ -37,7 +37,7 @@ class tlvChannelPreference : public BaseClass
         ~tlvChannelPreference();
 
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& radio_uid();
         uint8_t& operating_classes_list_length();
         std::tuple<bool, cPreferenceOperatingClasses&> operating_classes_list(size_t idx);

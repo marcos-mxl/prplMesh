@@ -33,7 +33,7 @@ class tlvTransmitPowerLimit : public BaseClass
         ~tlvTransmitPowerLimit();
 
         const eTlvTypeMap& type();
-        const uint16_t& length();
+        uint16_t& length();
         sMacAddr& radio_uid();
         //Transmit Power Limit EIRP per 20 MHz bandwidth representing the nominal transmit power limit for this radio.
         //The field is coded as a 2's complement signed integer in units of decibels relative to 1 mW (dBm).

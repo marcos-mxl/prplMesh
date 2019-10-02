@@ -36,7 +36,7 @@ class tlvDeviceBridgingCapability : public BaseClass
         ~tlvDeviceBridgingCapability();
 
         const eTlvType& type();
-        const uint16_t& length();
+        uint16_t& length();
         uint8_t& bridging_tuples_list_length();
         std::tuple<bool, cMacList&> bridging_tuples_list(size_t idx);
         std::shared_ptr<cMacList> create_bridging_tuples_list();

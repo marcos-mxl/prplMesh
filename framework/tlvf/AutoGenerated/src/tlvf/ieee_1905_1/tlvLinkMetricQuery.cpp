@@ -29,8 +29,8 @@ const eTlvType& tlvLinkMetricQuery::type() {
     return (const eTlvType&)(*m_type);
 }
 
-const uint16_t& tlvLinkMetricQuery::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvLinkMetricQuery::length() {
+    return (uint16_t&)(*m_length);
 }
 
 tlvLinkMetricQuery::eNeighborType& tlvLinkMetricQuery::neighbor_type() {
@@ -47,6 +47,7 @@ tlvLinkMetricQuery::eLinkMetricsType& tlvLinkMetricQuery::link_metrics() {
 
 void tlvLinkMetricQuery::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_mac_al_1905_device->struct_swap();
 }
@@ -72,29 +73,19 @@ bool tlvLinkMetricQuery::init()
     if (!m_parse__) *m_type = eTlvType::TLV_LINK_METRIC_QUERY;
     m_buff_ptr__ += sizeof(eTlvType) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_neighbor_type = (eNeighborType*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(eNeighborType) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(eNeighborType); }
     m_mac_al_1905_device = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_mac_al_1905_device->struct_init(); }
     m_link_metrics = (eLinkMetricsType*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(eLinkMetricsType) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(eLinkMetricsType); }
     if (m_buff_ptr__ - m_buff__ > ssize_t(m_buff_len__)) {
         TLVF_LOG(ERROR) << "Not enough available space on buffer. Class init failed";
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvType::TLV_LINK_METRIC_QUERY) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvType::TLV_LINK_METRIC_QUERY) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 

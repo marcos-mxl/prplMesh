@@ -1,6 +1,7 @@
 #
 ---
 _namespace: ieee1905_1
+_is_tlv_class : True
 
 tlvVendorSpecific:
   _type: class  

@@ -29,8 +29,8 @@ const eTlvType& tlvReceiverLinkMetric::type() {
     return (const eTlvType&)(*m_type);
 }
 
-const uint16_t& tlvReceiverLinkMetric::length() {
-    return (const uint16_t&)(*m_length);
+uint16_t& tlvReceiverLinkMetric::length() {
+    return (uint16_t&)(*m_length);
 }
 
 sMacAddr& tlvReceiverLinkMetric::al_mac_of_the_device_that_transmits() {
@@ -73,7 +73,6 @@ bool tlvReceiverLinkMetric::alloc_interface_pair_info(size_t count) {
     }
     m_interface_pair_info_idx__ += count;
     m_buff_ptr__ += len;
-    if(m_length){ (*m_length) += len; }
     if (!m_parse__) { 
         for (size_t i = m_interface_pair_info_idx__ - count; i < m_interface_pair_info_idx__; i++) { m_interface_pair_info[i].struct_init(); }
     }
@@ -82,6 +81,7 @@ bool tlvReceiverLinkMetric::alloc_interface_pair_info(size_t count) {
 
 void tlvReceiverLinkMetric::class_swap()
 {
+    tlvf_swap(16, reinterpret_cast<uint8_t*>(m_type));
     tlvf_swap(16, reinterpret_cast<uint8_t*>(m_length));
     m_al_mac_of_the_device_that_transmits->struct_swap();
     m_al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv->struct_swap();
@@ -110,35 +110,19 @@ bool tlvReceiverLinkMetric::init()
     if (!m_parse__) *m_type = eTlvType::TLV_RECEIVER_LINK_METRIC;
     m_buff_ptr__ += sizeof(eTlvType) * 1;
     m_length = (uint16_t*)m_buff_ptr__;
-    if (!m_parse__) *m_length = 0;
     m_buff_ptr__ += sizeof(uint16_t) * 1;
     m_al_mac_of_the_device_that_transmits = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_al_mac_of_the_device_that_transmits->struct_init(); }
     m_al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv = (sMacAddr*)m_buff_ptr__;
     m_buff_ptr__ += sizeof(sMacAddr) * 1;
-    if(m_length && !m_parse__){ (*m_length) += sizeof(sMacAddr); }
     if (!m_parse__) { m_al_mac_of_the_neighbor_whose_link_metric_is_reported_in_this_tlv->struct_init(); }
     m_interface_pair_info = (sInterfacePairInfo*)m_buff_ptr__;
-    if (m_length && m_parse__) {
-        size_t len = *m_length;
-        if (m_swap__) { tlvf_swap(16, reinterpret_cast<uint8_t*>(&len)); }
-        len -= (m_buff_ptr__ - sizeof(*m_type) - sizeof(*m_length) - m_buff__);
-        m_interface_pair_info_idx__ = len/sizeof(sInterfacePairInfo);
-        m_buff_ptr__ += len;
-    }
     if (m_buff_ptr__ - m_buff__ > ssize_t(m_buff_len__)) {
         TLVF_LOG(ERROR) << "Not enough available space on buffer. Class init failed";
         return false;
     }
     if (m_parse__ && m_swap__) { class_swap(); }
-    if (m_parse__) {
-        if (*m_type != eTlvType::TLV_RECEIVER_LINK_METRIC) {
-            TLVF_LOG(ERROR) << "TLV type mismatch. Expected value: " << int(eTlvType::TLV_RECEIVER_LINK_METRIC) << ", received value: " << int(*m_type);
-            return false;
-        }
-    }
     return true;
 }
 
