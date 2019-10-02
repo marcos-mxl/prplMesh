@@ -2381,7 +2381,7 @@ bool slave_thread::handle_cmdu_ap_manager_message(
         }
 
         //notify master
-        if (master_socket) {
+        if (!master_socket) {
             LOG(DEBUG) << "Controller is not connected";
             return true;
         }
