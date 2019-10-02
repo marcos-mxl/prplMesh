@@ -1200,9 +1200,9 @@ bool master_thread::handle_cmdu_1905_topology_notification(Socket *sd,
     std::shared_ptr<wfa_map::tlvClientAssociationEvent> client_association_event_tlv = nullptr;
     std::shared_ptr<beerocks_message::tlvVsClientAssociationEvent> vs_tlv            = nullptr;
 
-    int type;
-    while ((type = cmdu_rx.getNextTlvType()) != int(ieee1905_1::eTlvType::TLV_END_OF_MESSAGE)) {
-        switch (type) {
+    int tlvType;
+    while ((tlvType = cmdu_rx.getNextTlvType()) != int(ieee1905_1::eTlvType::TLV_END_OF_MESSAGE)) {
+        switch (tlvType) {
         case int(wfa_map::eTlvTypeMap::TLV_CLIENT_ASSOCIATION_EVENT):
             LOG(DEBUG) << "Found TLV_CLIENT_ASSOCIATION_EVENT TLV";
             client_association_event_tlv = cmdu_rx.addClass<wfa_map::tlvClientAssociationEvent>();
@@ -1226,14 +1226,19 @@ bool master_thread::handle_cmdu_1905_topology_notification(Socket *sd,
             }
             break;
         default:
-            LOG(ERROR) << "Unexpected TLV. Ignore CMDU.";
+            LOG(ERROR) << "Unexpected tlv type in TOPOLOGY_NOTIFICATION_MESSAGE, type="
+                       << int(tlvType);
+            // TODO: replace return statement with function that skip s unexpected tlv
+            // see: https://github.com/prplfoundation/prplMesh/issues/107
             return false;
         }
     }
 
     if (!client_association_event_tlv) {
-        LOG(ERROR) << "wfa_map::tlvClientAssociationEvent not found";
-        return false;
+        // The standard allows having zero TLV_CLIENT_ASSOCIATION_EVENT, in that case, there is no
+        // point to continue the handling of this message.
+        LOG(INFO) << "wfa_map::tlvClientAssociationEvent not found";
+        return true;
     }
 
     auto &client_mac    = client_association_event_tlv->client_mac();
@@ -1242,17 +1247,14 @@ bool master_thread::handle_cmdu_1905_topology_notification(Socket *sd,
     auto &bssid    = client_association_event_tlv->bssid();
     auto bssid_str = network_utils::mac_to_string(bssid);
 
-    auto &association_event = client_association_event_tlv->association_event();
+    auto association_event = client_association_event_tlv->association_event();
+    bool client_connected =
+        (association_event == wfa_map::tlvClientAssociationEvent::CLIENT_HAS_JOINED_THE_BSS);
 
-    LOG(INFO) << "client "
-              << (association_event == wfa_map::tlvClientAssociationEvent::CLIENT_HAS_JOINED_THE_BSS
-                      ? "connected"
-                      : "disconnected")
+    LOG(INFO) << "client " << (client_connected ? "connected" : "disconnected")
               << ", client_mac=" << client_mac_str << ", bssid=" << bssid_str;
 
-    if (association_event == wfa_map::tlvClientAssociationEvent::CLIENT_HAS_JOINED_THE_BSS) {
-        // client connected
-
+    if (client_connected) {
         //add or update node parent
         database.add_node(client_mac_str, bssid_str);
 
@@ -1286,15 +1288,13 @@ bool master_thread::handle_cmdu_1905_topology_notification(Socket *sd,
 
 #ifdef BEEROCKS_RDKB
         //push event to rdkb_wlan_hal task
-        if (database.settings_rdkb_extensions()) {
+        if (vs_tlv && database.settings_rdkb_extensions()) {
             beerocks_message::sClientAssociationParams new_event = {};
 
-            new_event.mac               = client_mac;
-            new_event.bssid             = bssid;
-            new_event.vap_id            = vs_tlv->vap_id();
-            new_event.disconnect_reason = vs_tlv->disconnect_reason();
-            new_event.disconnect_source = vs_tlv->disconnect_source();
-            new_event.dissconnect_type  = vs_tlv->dissconnect_type();
+            new_event.mac          = client_mac;
+            new_event.bssid        = bssid;
+            new_event.vap_id       = vs_tlv->vap_id();
+            new_event.capabilities = vs_tlv->capabilities();
 
             tasks.push_event(database.get_rdkb_wlan_task_id(),
                              rdkb_wlan_task::events::STEERING_EVENT_CLIENT_CONNECT_AVAILABLE,
@@ -1310,7 +1310,7 @@ bool master_thread::handle_cmdu_1905_topology_notification(Socket *sd,
         son_actions::handle_completed_connection(database, cmdu_tx, tasks, client_mac_str);
 
     } else {
-        // client dosconnected
+        // client disconnected
 
 #ifdef BEEROCKS_RDKB
         //push event to rdkb_wlan_hal task
