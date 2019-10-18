@@ -28,6 +28,9 @@ source analyzer-venv/bin/activate
 Your prompt should now have "analyzer-venv" appended to it.
 You can deactivate it by running `deactivate`.
 
+2. Go to the analyzer directory
+cd prplMesh/tools/beerocks_analyzer
+
 2.  Install all the required package inside the virtualenv
 
 ```sh
